@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — FIVE-STAR JAPAN</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'Helvetica Neue', 'Meiryo', sans-serif;
+    background: #fafafa;
+    color: #1a1a1a;
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* ─── Sidebar ─── */
+  .sidebar {
+    width: 220px;
+    background: #111;
+    color: #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 10;
+  }
+
+  .sidebar-brand {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .sidebar-brand img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    /* original colors */
+  }
+  .sidebar-brand-text h2 {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #fff;
+    line-height: 1.1;
+  }
+  .sidebar-brand-text span {
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    color: #666;
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
+  }
+  .nav-group-label {
+    padding: 12px 24px 6px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: #555;
+    text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 24px;
+    text-decoration: none;
+    color: #aaa;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.12s;
+    border-left: 2px solid transparent;
+  }
+  .nav-item:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.04);
+    border-left-color: #fff;
+  }
+  .nav-item svg {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+  .nav-item:hover svg { opacity: 1; }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #222;
+    font-size: 10px;
+    color: #444;
+  }
+
+  /* ─── Main ─── */
+  .main {
+    margin-left: 220px;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #eee;
+    background: #fff;
+  }
+  .topbar h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111;
+  }
+  .topbar-time {
+    font-size: 12px;
+    color: #999;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .content {
+    padding: 32px 40px;
+  }
+
+  /* ─── Shortcut Grid (Chrome-style) ─── */
+  .card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: flex-start;
+  }
+
+  .card {
+    width: 112px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 8px 12px;
+    text-decoration: none;
+    color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    transition: background 0.15s;
+  }
+  .card:hover {
+    background: #f0f0f0;
+  }
+
+  .card-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .card-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .card-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: #555;
+    text-align: center;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  /* subtle icon bg */
+  .ic-red    { background: #fef2f2; }
+  .ic-green  { background: #f0fdf4; }
+  .ic-blue   { background: #eff6ff; }
+  .ic-violet { background: #f5f3ff; }
+  .ic-teal   { background: #f0fdfa; }
+  .ic-sky    { background: #f0f9ff; }
+  .ic-orange { background: #fff7ed; }
+  .ic-amber  { background: #fffbeb; }
+  .ic-pink   { background: #fdf2f8; }
+
+  .ic-red    svg { stroke: #dc2626; }
+  .ic-green  svg { stroke: #16a34a; }
+  .ic-blue   svg { stroke: #2563eb; }
+  .ic-violet svg { stroke: #7c3aed; }
+  .ic-teal   svg { stroke: #0d9488; }
+  .ic-sky    svg { stroke: #0284c7; }
+  .ic-orange svg { stroke: #ea580c; }
+  .ic-amber  svg { stroke: #d97706; }
+  .ic-pink   svg { stroke: #db2777; }
+</style>
+</head>
+<body>
+
+<!-- ═══ Sidebar ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <img src="data:image/png;base64,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" alt="">
+    <div class="sidebar-brand-text">
+      <h2>Dashboard</h2>
+      <span>FIVE-STAR JAPAN</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group-label">メイン</div>
+    <a class="nav-item" href="https://trueworks-my.sharepoint.com/" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+      OneDrive
+    </a>
+    <a class="nav-item" href="https://mail.google.com/mail/u/?authuser=jimu@fivestarjapan.com" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+      Gmail
+    </a>
+
+    <div class="nav-group-label">プレイヤー</div>
+    <a class="nav-item" href="https://docs.google.com/spreadsheets/d/14XrCDIBj38DP_kYFAvTDbtSCCu9BRrNas2XWwiSjnfE/edit?gid=321019440#gid=321019440" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      プレイヤー管理
+    </a>
+    <a class="nav-item" href="https://docs.google.com/spreadsheets/d/10P16I1bzJr-QLUZVpdkqyHnwLlqkDX22LxYx_uanC8I/edit?gid=535445891#gid=535445891" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      エリア分け画像
+    </a>
+    <a class="nav-item" href="https://docs.google.com/spreadsheets/d/10P16I1bzJr-QLUZVpdkqyHnwLlqkDX22LxYx_uanC8I/edit?gid=1410246305#gid=1410246305" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      電話番号管理
+    </a>
+
+    <div class="nav-group-label">ツール</div>
+    <a class="nav-item" href="https://fsjjimu.github.io/invoice-renamer/" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12h4"/><path d="M10 16h4"/></svg>
+      リネームツール
+    </a>
+    <a class="nav-item" href="https://fsjjimu.github.io/emergency-box/" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>
+      案件手配BOX
+    </a>
+    <a class="nav-item" href="https://sites.google.com/view/trueworksmanual/tw?authuser=0" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+      社内マニュアル
+    </a>
+    <a class="nav-item" href="https://docs.google.com/spreadsheets/d/19hV8je34i34H-ZrkiZx1FlICHNbzbozPobNiaSL3e9A/edit?gid=1722473426#gid=1722473426" target="_blank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+      手配設定シート
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span id="footerTime"></span>
+  </div>
+</aside>
+
+<!-- ═══ Main content ═══ -->
+<div class="main">
+  <div class="topbar">
+    <h1>Quick Access</h1>
+    <div class="topbar-time" id="topbarTime"></div>
+  </div>
+
+  <div class="content">
+    <div class="card-grid">
+
+      <a class="card" href="https://trueworks-my.sharepoint.com/" target="_blank">
+        <div class="card-icon ic-sky"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg></div>
+        <span class="card-label">OneDrive</span>
+      </a>
+
+      <a class="card" href="https://mail.google.com/mail/u/?authuser=jimu@fivestarjapan.com" target="_blank">
+        <div class="card-icon ic-orange"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+        <span class="card-label">Gmail</span>
+      </a>
+
+      <a class="card" href="https://docs.google.com/spreadsheets/d/14XrCDIBj38DP_kYFAvTDbtSCCu9BRrNas2XWwiSjnfE/edit?gid=321019440#gid=321019440" target="_blank">
+        <div class="card-icon ic-blue"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+        <span class="card-label">プレイヤー管理</span>
+      </a>
+
+      <a class="card" href="https://docs.google.com/spreadsheets/d/10P16I1bzJr-QLUZVpdkqyHnwLlqkDX22LxYx_uanC8I/edit?gid=535445891#gid=535445891" target="_blank">
+        <div class="card-icon ic-violet"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></div>
+        <span class="card-label">エリア分け</span>
+      </a>
+
+      <a class="card" href="https://docs.google.com/spreadsheets/d/10P16I1bzJr-QLUZVpdkqyHnwLlqkDX22LxYx_uanC8I/edit?gid=1410246305#gid=1410246305" target="_blank">
+        <div class="card-icon ic-teal"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
+        <span class="card-label">電話番号管理</span>
+      </a>
+
+      <a class="card" href="https://fsjjimu.github.io/invoice-renamer/" target="_blank">
+        <div class="card-icon ic-pink"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 12h4"/><path d="M10 16h4"/></svg></div>
+        <span class="card-label">リネーム</span>
+      </a>
+
+      <a class="card" href="https://fsjjimu.github.io/emergency-box/" target="_blank">
+        <div class="card-icon ic-red"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
+        <span class="card-label">手配BOX</span>
+      </a>
+
+
+    </div>
+  </div>
+</div>
+
+<script>
+function updateClock() {
+  const now = new Date();
+  const full = now.toLocaleString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit', weekday:'short', hour:'2-digit', minute:'2-digit' });
+  document.getElementById('topbarTime').textContent = full;
+  document.getElementById('footerTime').textContent = now.toLocaleString('ja-JP', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+updateClock();
+setInterval(updateClock, 60000);
+</script>
+
+</body>
+</html>
