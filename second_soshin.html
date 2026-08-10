@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>セカンド自動送信｜FIVE-STAR JAPAN</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Yu Gothic UI","Meiryo",system-ui,sans-serif;
+         background: #f6f7f9; color: #1f2328; }
+  a { color: inherit; }
+
+  .top { background: #fff; border-bottom: 1px solid #e5e7eb; padding: 16px 28px;
+         display: flex; align-items: center; gap: 14px; }
+  .top h1 { font-size: 17px; margin: 0; }
+  .back { margin-left: auto; font-size: 13px; color: #2563eb; text-decoration: none; }
+  .wrap { max-width: 940px; margin: 22px auto 60px; padding: 0 20px; }
+
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+          padding: 20px 24px; margin-bottom: 18px;
+          box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .card h2 { font-size: 14.5px; margin: 0 0 4px; }
+  .card .sub { font-size: 12.5px; color: #6b7280; margin-bottom: 14px; }
+
+  /* 送信担当 */
+  .staff { border-top: 1px solid #eef0f3; }
+  .srow { display: flex; align-items: center; gap: 10px;
+          padding: 11px 2px; border-bottom: 1px solid #f3f4f6; }
+  .srow:last-child { border-bottom: none; }
+  .sname { font-size: 14px; }
+  .srow.on .sname { font-weight: 600; color: #15803d; }
+  .tag { font-size: 11px; border-radius: 999px; padding: 2px 8px; }
+  .tag.duty { color: #15803d; background: #dcfce7; }
+  .tag.up   { color: #15803d; background: #dcfce7; }
+  .tag.down { color: #b45309; background: #fef3c7; }
+  .sw { margin-left: auto; flex: none; width: 52px; height: 28px; border: none;
+        border-radius: 999px; background: #cbd5e1; position: relative;
+        cursor: pointer; transition: background .18s; padding: 0; }
+  .sw[aria-pressed="true"] { background: #16a34a; }
+  .sw:disabled { opacity: .5; cursor: default; }
+  .knob { position: absolute; top: 3px; left: 3px; width: 22px; height: 22px;
+          border-radius: 50%; background: #fff; transition: transform .18s;
+          box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+  .sw[aria-pressed="true"] .knob { transform: translateX(24px); }
+
+  .banner { border-radius: 8px; padding: 11px 14px; font-size: 13px; margin-bottom: 14px; }
+  .banner.ok   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+  .banner.off  { background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; }
+  .banner.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+
+  /* 状況 */
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .stat { flex: 1 1 120px; border: 1px solid #e5e7eb; border-radius: 9px;
+          padding: 12px; text-align: center; background: #fafbfc; }
+  .stat b { display: block; font-size: 20px; line-height: 1.2; }
+  .stat span { font-size: 11.5px; color: #6b7280; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 12px; }
+  th, td { border-bottom: 1px solid #f0f1f3; padding: 7px 8px; text-align: left; }
+  th { color: #6b7280; font-weight: 600; }
+  .st { font-size: 11px; border-radius: 999px; padding: 2px 7px; }
+  .st.sent { background: #dcfce7; color: #166534; }
+  .st.test { background: #e0e7ff; color: #3730a3; }
+  .st.pending { background: #fef3c7; color: #92400e; }
+  .st.failed { background: #fee2e2; color: #991b1b; }
+  .st.skipped { background: #f1f5f9; color: #64748b; }
+
+  /* 手順・ファイル */
+  ol.steps { margin: 0; padding-left: 20px; font-size: 13.5px; line-height: 1.9; }
+  ol.steps code { background: #f2f4f7; border: 1px solid #e3e7ec; border-radius: 4px;
+                  padding: 1px 6px; font-size: 12.5px; }
+  .files { display: grid; grid-template-columns: repeat(auto-fill,minmax(230px,1fr));
+           gap: 10px; margin-top: 4px; }
+  .file { border: 1px solid #e5e7eb; border-radius: 9px; padding: 11px 13px;
+          background: #fafbfc; }
+  .file b { display: block; font-size: 13px; }
+  .file span { font-size: 11.5px; color: #6b7280; }
+  .links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { display: inline-block; text-decoration: none; font-size: 13px;
+         border: 1px solid #d7dce2; border-radius: 8px; padding: 9px 14px;
+         background: #fff; color: #1f2328; }
+  .btn:hover { background: #f6f8fa; }
+  .btn.pri { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .path { font-size: 12px; color: #6b7280; margin-top: 10px; word-break: break-all; }
+</style></head><body>
+
+<!-- 管理者が config.js を用意しておけば、事務員はキー入力なしで使える -->
+<script src="config.js"></script>
+
+<div class="top">
+  <h1>セカンド自動送信</h1>
+  <a class="back" href="../ダッシュボード/index.html">← ダッシュボードに戻る</a>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══ 送信担当 ═══ -->
+  <div class="card">
+    <h2>送信担当</h2>
+    <div class="sub">
+      ONにした人のPCから、その人のLINEアカウントでセカンドが送られます。
+      ONにできるのは1人だけで、交代時は入る人がONにすれば前の人は自動でOFFになります。
+    </div>
+    <div id="banner" class="banner off">状態を確認しています…</div>
+
+    <!-- 接続キーの入力（未設定のときだけ出る） -->
+    <div id="keySetup" style="display:none">
+      <div class="banner warn" style="margin-bottom:10px">
+        このパソコンではまだ接続キーが設定されていません。<br>
+        <span style="font-size:12px">
+          Supabase の Project Settings → API Keys にある
+          <b>anon（publishable）</b>キーを貼り付けてください。
+          一度入れれば次回から不要です。
+        </span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="keyInput" type="password" placeholder="接続キーを貼り付け"
+               style="flex:1 1 320px;padding:9px 12px;border:1px solid #d7dce2;
+                      border-radius:8px;font-size:13px">
+        <button class="btn pri" onclick="saveKey()">保存</button>
+      </div>
+    </div>
+
+    <div class="staff" id="staffList"></div>
+  </div>
+
+  <!-- ═══ 今日の状況 ═══ -->
+  <div class="card">
+    <h2>今日の状況</h2>
+    <div class="sub">案件の取得を検知してから、セカンドを送るまでの記録です。</div>
+    <div class="stats" id="stats"></div>
+    <table id="recent"><thead><tr>
+      <th>時刻</th><th>案件番号</th><th>取得者</th><th>ルーム</th><th>状態</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <!-- ═══ はじめて使う方へ ═══ -->
+  <div class="card">
+    <h2>はじめて使うとき</h2>
+    <div class="sub">この3つだけです。Pythonなどのインストールは要りません。</div>
+    <ol class="steps">
+      <li><b>はじめに実行</b> をダブルクリックして、名前を入力する（初回のみ）</li>
+      <li><b>LINE用Chrome起動</b> をダブルクリックして、自分のLINEにログインする</li>
+      <li><b>セカンド自動送信_常駐起動</b> をダブルクリックする（出勤時に毎回）</li>
+    </ol>
+    <div class="sub" style="margin:14px 0 6px">
+      そのあと、このページで自分のトグルをONにすれば動き始めます。
+    </div>
+    <div class="files">
+      <div class="file"><b>はじめに実行.bat</b><span>初回セットアップ（名前を入れるだけ）</span></div>
+      <div class="file"><b>LINE用Chrome起動.bat</b><span>送信に使うChromeを開く</span></div>
+      <div class="file"><b>セカンド自動送信_常駐起動.bat</b><span>出勤時に1回ダブルクリック</span></div>
+      <div class="file"><b>セットアップ診断.bat</b><span>うまく動かないときに原因を調べる</span></div>
+    </div>
+    <div class="path">
+      置き場所: <span id="folder">FSJ関連 フォルダ</span>
+      <button class="btn" style="padding:3px 9px;font-size:11.5px;margin-left:6px"
+              onclick="copyFolder()">パスをコピー</button>
+    </div>
+    <div class="sub" style="margin-top:12px">
+      ※ Macの方は同じ名前の <code>.command</code> ファイルを使ってください。
+    </div>
+  </div>
+
+  <!-- ═══ 関連 ═══ -->
+  <div class="card">
+    <h2>関連ページ・資料</h2>
+    <div class="sub">担当者の追加や、仕組みの詳細はこちらです。</div>
+    <div class="links">
+      <a class="btn pri" target="_blank"
+         href="https://docs.google.com/spreadsheets/d/12NDXPYgcO2NTNJV71x7kOMOWxD-NZnA-8tNichtupJ0/edit#gid=0">
+         LINE担当者マッピング</a>
+      <a class="btn" target="_blank"
+         href="../手順書/LINE収集システム_業務手順書.pdf">業務手順書（PDF）</a>
+      <a class="btn" target="_blank"
+         href="../手順書/LINE収集システム_構築完了報告書.pdf">構築完了報告書（PDF）</a>
+      <a class="btn" target="_blank"
+         href="https://docs.google.com/spreadsheets/d/19hV8je34i34H-ZrkiZx1FlICHNbzbozPobNiaSL3e9A/edit">
+         案件手配設定シート</a>
+      <button class="btn" onclick="clearKey()">接続キーを入れ直す</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* 接続キー（anon）の取得順:
+     1. 同じフォルダの config.js が置かれていれば、そこから読む
+        （管理者が1回用意して配れば、事務員は何も入力しなくてよい）
+     2. なければ、このブラウザに保存された値を使う
+     3. どちらも無ければ、画面で入力してもらう（保存すれば次回から不要）
+
+   このキーで触れるのは送信担当のトグルと送信状況の表示だけ。
+   顧客情報（セカンド本文）はこのキーでは読めない。 */
+const SUPABASE_URL = "https://vbzwevceisxliumsqytd.supabase.co";
+const KEY_STORE = "fsj_second_anon_key";
+let SUPABASE_ANON_KEY = (window.FSJ_ANON_KEY
+                         || localStorage.getItem(KEY_STORE) || "").trim();
+
+function saveKey() {
+  const v = document.getElementById("keyInput").value.trim();
+  if (!v) return;
+  localStorage.setItem(KEY_STORE, v);
+  SUPABASE_ANON_KEY = v;
+  document.getElementById("keySetup").style.display = "none";
+  load();
+}
+
+function clearKey() {
+  if (!confirm("このパソコンに保存した接続キーを消します。よろしいですか？")) return;
+  localStorage.removeItem(KEY_STORE);
+  location.reload();
+}
+
+const banner = document.getElementById("banner");
+const staffList = document.getElementById("staffList");
+const statsEl = document.getElementById("stats");
+const recentBody = document.querySelector("#recent tbody");
+
+function hdr() {
+  return { apikey: SUPABASE_ANON_KEY,
+           Authorization: "Bearer " + SUPABASE_ANON_KEY,
+           "Content-Type": "application/json" };
+}
+function setBanner(cls, text) { banner.className = "banner " + cls; banner.textContent = text; }
+
+/* クライアントが動いているか。2分以内に生存報告があれば稼働中。 */
+function pcUp(s) {
+  return !!s.client_seen_at &&
+         (Date.now() - new Date(s.client_seen_at).getTime()) < 120000;
+}
+
+function renderStaff(list) {
+  const duty = list.find(s => s.auto_send);
+  if (!duty) setBanner("off", "OFF — 誰も送信担当になっていません（手動で送ってください）");
+  else if (!pcUp(duty))
+    setBanner("warn", duty.display_name
+      + " さんが送信担当ですが、PCで「セカンド自動送信_常駐起動」が動いていません。"
+      + "起動するまで送信されません。");
+  else setBanner("ok", duty.display_name + " さんのPCから自動送信しています。");
+
+  staffList.innerHTML = "";
+  list.forEach(s => {
+    const row = document.createElement("div");
+    row.className = "srow" + (s.auto_send ? " on" : "");
+    const nm = document.createElement("span");
+    nm.className = "sname"; nm.textContent = s.display_name;
+    row.appendChild(nm);
+    if (s.auto_send) {
+      const t = document.createElement("span");
+      t.className = "tag duty"; t.textContent = "送信担当"; row.appendChild(t);
+    }
+    const up = pcUp(s);
+    const pc = document.createElement("span");
+    pc.className = "tag " + (up ? "up" : "down");
+    pc.textContent = up ? "PC稼働中" : "PC未起動";
+    row.appendChild(pc);
+    const sw = document.createElement("button");
+    sw.className = "sw";
+    sw.setAttribute("aria-pressed", s.auto_send ? "true" : "false");
+    sw.innerHTML = '<span class="knob"></span>';
+    sw.onclick = () => toggle(s, !s.auto_send);
+    row.appendChild(sw);
+    staffList.appendChild(row);
+  });
+}
+
+async function toggle(s, next) {
+  if (next) {
+    let m = s.display_name + " さんのPCから自動送信します。\n（他の方はOFFになります）";
+    if (!pcUp(s)) m += "\n\n⚠ このPCでクライアントが起動していません。\n"
+                     + "「セカンド自動送信_常駐起動」を実行してください。";
+    if (!confirm(m)) return;
+  }
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/staff?staff_key=eq."
+                          + encodeURIComponent(s.staff_key),
+      { method: "PATCH", headers: { ...hdr(), Prefer: "return=minimal" },
+        body: JSON.stringify({ auto_send: next }) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    load();
+  } catch (e) { setBanner("warn", "切り替えに失敗しました: " + e.message); }
+}
+
+function renderQueue(rows) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const t = rows.filter(r => new Date(r.detected_at) >= today);
+  const by = k => t.filter(r => r.status === k).length;
+  statsEl.innerHTML = "";
+  [["検知", t.length], ["送信済み", by("sent")], ["テスト", by("test")],
+   ["送信待ち", by("pending")], ["失敗", by("failed")]].forEach(([label, n]) => {
+    const d = document.createElement("div");
+    d.className = "stat";
+    d.innerHTML = "<b>" + n + "</b><span>" + label + "</span>";
+    statsEl.appendChild(d);
+  });
+
+  recentBody.innerHTML = "";
+  rows.slice(0, 12).forEach(r => {
+    const tr = document.createElement("tr");
+    const time = new Date(r.detected_at).toLocaleTimeString("ja-JP",
+                   { hour: "2-digit", minute: "2-digit" });
+    tr.innerHTML = "<td>" + time + "</td><td>" + r.case_no + "</td>"
+      + "<td>" + (r.player_line_name || "") + "</td>"
+      + "<td>" + (r.room_name || "") + "</td>"
+      + '<td><span class="st ' + r.status + '">' + r.status + "</span></td>";
+    recentBody.appendChild(tr);
+  });
+  if (!rows.length)
+    recentBody.innerHTML = '<tr><td colspan="5" style="color:#9ca3af">'
+      + 'まだ記録がありません</td></tr>';
+}
+
+async function load() {
+  const setup = document.getElementById("keySetup");
+  if (!SUPABASE_ANON_KEY) {
+    setup.style.display = "";
+    setBanner("off", "接続キーを設定すると、送信担当の切り替えと状況表示ができます。");
+    return;
+  }
+  setup.style.display = "none";
+  try {
+    const [s, q] = await Promise.all([
+      fetch(SUPABASE_URL + "/rest/v1/staff?active=eq.true&select=staff_key,"
+            + "display_name,auto_send,client_seen_at&order=display_name",
+            { headers: hdr() }),
+      fetch(SUPABASE_URL + "/rest/v1/dispatch_status_v?select=*"
+            + "&order=detected_at.desc&limit=200", { headers: hdr() })
+    ]);
+    if (s.status === 401 || s.status === 403) {
+      localStorage.removeItem(KEY_STORE);
+      SUPABASE_ANON_KEY = "";
+      setBanner("warn", "接続キーが正しくないようです。入れ直してください。");
+      document.getElementById("keySetup").style.display = "";
+      return;
+    }
+    if (s.ok) renderStaff(await s.json());
+    if (q.ok) renderQueue(await q.json());
+  } catch (e) { setBanner("warn", "接続に失敗しました: " + e.message); }
+}
+
+function copyFolder() {
+  const p = decodeURIComponent(location.href.replace(/\/[^/]*$/, ""))
+              .replace(/^file:\/\/\//, "").replace(/\//g, "\\");
+  navigator.clipboard.writeText(p);
+  document.getElementById("folder").textContent = p;
+}
+
+load();
+setInterval(load, 20000);
+</script>
+</body></html>
