@@ -81,12 +81,9 @@
   .path { font-size: 12px; color: #6b7280; margin-top: 10px; word-break: break-all; }
 </style></head><body>
 
-<!-- 管理者が config.js を用意しておけば、事務員はキー入力なしで使える -->
-<script src="config.js"></script>
-
 <div class="top">
   <h1>セカンド自動送信</h1>
-  <a class="back" href="../ダッシュボード/index.html">← ダッシュボードに戻る</a>
+  <a class="back" href="index.html">← ダッシュボードに戻る</a>
 </div>
 
 <div class="wrap">
@@ -105,9 +102,9 @@
       <div class="banner warn" style="margin-bottom:10px">
         このパソコンではまだ接続キーが設定されていません。<br>
         <span style="font-size:12px">
-          Supabase の Project Settings → API Keys にある
-          <b>anon（publishable）</b>キーを貼り付けてください。
-          一度入れれば次回から不要です。
+          管理者から受け取った<b>接続キー</b>を貼り付けてください。
+          <b>一度入れれば、このパソコンでは次回から不要</b>です。<br>
+          入力した内容はこのブラウザの中だけに保存されます。
         </span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -150,9 +147,12 @@
       <div class="file"><b>セットアップ診断.bat</b><span>うまく動かないときに原因を調べる</span></div>
     </div>
     <div class="path">
-      置き場所: <span id="folder">FSJ関連 フォルダ</span>
-      <button class="btn" style="padding:3px 9px;font-size:11.5px;margin-left:6px"
-              onclick="copyFolder()">パスをコピー</button>
+      置き場所: <b>FSJ関連 › セカンド自動送信</b> フォルダ
+      <span class="local-only">
+        <button class="btn" style="padding:3px 9px;font-size:11.5px;margin-left:6px"
+                onclick="copyFolder()">パスをコピー</button>
+        <span id="folder"></span>
+      </span>
     </div>
     <div class="sub" style="margin-top:12px">
       ※ Macの方は同じ名前の <code>.command</code> ファイルを使ってください。
@@ -167,9 +167,9 @@
       <a class="btn pri" target="_blank"
          href="https://docs.google.com/spreadsheets/d/12NDXPYgcO2NTNJV71x7kOMOWxD-NZnA-8tNichtupJ0/edit#gid=0">
          LINE担当者マッピング</a>
-      <a class="btn" target="_blank"
+      <a class="btn local-only" target="_blank"
          href="../手順書/LINE収集システム_業務手順書.pdf">業務手順書（PDF）</a>
-      <a class="btn" target="_blank"
+      <a class="btn local-only" target="_blank"
          href="../手順書/LINE収集システム_構築完了報告書.pdf">構築完了報告書（PDF）</a>
       <a class="btn" target="_blank"
          href="https://docs.google.com/spreadsheets/d/19hV8je34i34H-ZrkiZx1FlICHNbzbozPobNiaSL3e9A/edit">
@@ -181,18 +181,17 @@
 </div>
 
 <script>
-/* 接続キー（anon）の取得順:
-     1. 同じフォルダの config.js が置かれていれば、そこから読む
-        （管理者が1回用意して配れば、事務員は何も入力しなくてよい）
-     2. なければ、このブラウザに保存された値を使う
-     3. どちらも無ければ、画面で入力してもらう（保存すれば次回から不要）
+/* 接続キー（anon）は、このページを開いた人が1回だけ入力する。
+   入力した値はそのブラウザの中だけに保存され、サーバーにもGitHubにも載らない。
+
+   ★このページはGitHub Pagesで公開しているため、キーをファイルに書き込んではいけない。
+     公開リポジトリに置くと、誰でも送信担当のトグルを操作できてしまう。
 
    このキーで触れるのは送信担当のトグルと送信状況の表示だけ。
    顧客情報（セカンド本文）はこのキーでは読めない。 */
 const SUPABASE_URL = "https://vbzwevceisxliumsqytd.supabase.co";
 const KEY_STORE = "fsj_second_anon_key";
-let SUPABASE_ANON_KEY = (window.FSJ_ANON_KEY
-                         || localStorage.getItem(KEY_STORE) || "").trim();
+let SUPABASE_ANON_KEY = (localStorage.getItem(KEY_STORE) || "").trim();
 
 function saveKey() {
   const v = document.getElementById("keyInput").value.trim();
@@ -338,10 +337,17 @@ async function load() {
 
 function copyFolder() {
   const p = decodeURIComponent(location.href.replace(/\/[^/]*$/, ""))
-              .replace(/^file:\/\/\//, "").replace(/\//g, "\\");
+              .replace(/^file:\/\/\//, "").replace(/\//g, "\\")
+              .replace(/ダッシュボード$/, "セカンド自動送信");
   navigator.clipboard.writeText(p);
   document.getElementById("folder").textContent = p;
 }
+
+/* ネット上（GitHub Pages等）で開いたときは、
+   ローカルのフォルダやPDFを指す要素を隠す。リンク切れに見えるため。 */
+if (location.protocol !== "file:")
+  document.querySelectorAll(".local-only")
+          .forEach(el => el.style.display = "none");
 
 load();
 setInterval(load, 20000);
