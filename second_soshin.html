@@ -44,6 +44,8 @@
   .banner.ok   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
   .banner.off  { background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; }
   .banner.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
+  .banner.live { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+                 font-weight: 700; }
 
   /* 状況 */
   .stats { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -87,6 +89,11 @@
 </div>
 
 <div class="wrap">
+
+  <!-- いまテストか本番かを最初に見せる。
+       どちらか分からないままトグルをONにできると、
+       テストのつもりで本物のプレイヤーへ送ってしまう。 -->
+  <div id="mode" class="banner" style="display:none"></div>
 
   <!-- ═══ 送信担当 ═══ -->
   <div class="card">
@@ -307,6 +314,27 @@ function renderQueue(rows) {
       + 'まだ記録がありません</td></tr>';
 }
 
+/* テストモードか本番かを画面の先頭に出す。
+   設定はDBの1か所（app_settings）にあり、全員のPCが同じものを見る。 */
+function renderMode(rows) {
+  const el = document.getElementById("mode");
+  el.style.display = "";
+  if (!rows || !rows.length) {
+    el.className = "banner warn";
+    el.textContent = "モード設定が読めません。送信側は安全のためテスト扱いで動きます。";
+    return;
+  }
+  const m = rows[0];
+  if (m.test_mode) {
+    el.className = "banner ok";
+    el.textContent = "テストモード中 — プレイヤーには送りません（"
+      + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）";
+  } else {
+    el.className = "banner live";
+    el.textContent = "★本番送信中 — 取得したプレイヤー本人へ実際にセカンドが送られます";
+  }
+}
+
 async function load() {
   const setup = document.getElementById("keySetup");
   if (!SUPABASE_ANON_KEY) {
@@ -316,12 +344,13 @@ async function load() {
   }
   setup.style.display = "none";
   try {
-    const [s, q] = await Promise.all([
+    const [s, q, m] = await Promise.all([
       fetch(SUPABASE_URL + "/rest/v1/staff?active=eq.true&select=staff_key,"
             + "display_name,auto_send,client_seen_at&order=display_name",
             { headers: hdr() }),
       fetch(SUPABASE_URL + "/rest/v1/dispatch_status_v?select=*"
-            + "&order=detected_at.desc&limit=200", { headers: hdr() })
+            + "&order=detected_at.desc&limit=200", { headers: hdr() }),
+      fetch(SUPABASE_URL + "/rest/v1/second_mode_v?select=*", { headers: hdr() })
     ]);
     if (s.status === 401 || s.status === 403) {
       localStorage.removeItem(KEY_STORE);
@@ -332,6 +361,7 @@ async function load() {
     }
     if (s.ok) renderStaff(await s.json());
     if (q.ok) renderQueue(await q.json());
+    renderMode(m.ok ? await m.json() : null);
   } catch (e) { setBanner("warn", "接続に失敗しました: " + e.message); }
 }
 
