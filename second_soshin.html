@@ -154,39 +154,39 @@
   <div class="card">
     <h2>はじめて使うとき</h2>
     <div style="margin:4px 0 16px">
-      <a class="btn pri" href="fsj-second-sender.zip" download
-         style="font-size:14px;padding:9px 18px">一式をダウンロード（zip）</a>
+      <a class="btn pri" href="fsj-setup.bat" download="FSJセカンド自動送信_セットアップ.bat"
+         style="font-size:14px;padding:9px 18px">セットアップをダウンロード</a>
       <span class="sub" style="margin-left:10px">
-        解凍したら、好きな場所（デスクトップなど）に置いてください。
+        ダウンロードした1つのファイルをダブルクリックするだけです。<br>
+        置き場所を作る・解凍する、といった作業は要りません。
       </span>
     </div>
 
     <ol class="steps">
       <li>このページの上で <b>接続キー</b> を入力する（初回のみ）</li>
-      <li>上のボタンで <b>一式をダウンロード</b> して解凍する</li>
-      <li><b>はじめに実行</b> をダブルクリックして、
-          <b>名前</b>と<b>送信用キー</b>を入力する（初回のみ）</li>
-      <li><b>LINE用Chrome起動</b> をダブルクリックして、自分のLINEにログインする</li>
-      <li><b>セカンド自動送信_常駐起動</b> をダブルクリックする（出勤時に毎回）</li>
+      <li>上のボタンのファイルを<b>ダブルクリック</b>する</li>
+      <li><b>名前</b>と<b>送信用キー</b>を入力し、続けて<b>LINEにログイン</b>する（初回のみ）</li>
+      <li>出勤したら <b>セカンド自動送信_常駐起動</b> をダブルクリック（毎回）</li>
       <li>このページで<b>自分のトグルをON</b>にすれば動き始める</li>
     </ol>
     <div class="sub" style="margin:10px 0 0">
       ※ <b>送信用キー</b>は管理者から受け取ってください。
-      このページの上で入れる「接続キー」とは別のものです。
+      このページの上で入れる「接続キー」とは別のものです。<br>
+      ※ ダウンロード時に警告が出たら「保存」、開くときは「詳細情報」→「実行」を選んでください。
     </div>
-    <div class="files">
-      <div class="file"><b>はじめに実行</b><span>初回セットアップ（名前を入れるだけ）</span></div>
-      <div class="file"><b>LINE用Chrome起動</b><span>送信に使うChromeを開く</span></div>
-      <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回ダブルクリック</span></div>
-      <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
-    </div>
+
     <div class="os">
       <div class="os-name">・Windowsの場合</div>
       <div class="sub">
-        解凍してできた「FSJセカンド自動送信」を開いて、その中の
-        <b>Windows</b> フォルダを使ってください。<br>
-        「はじめに実行」を1回動かすと、<b>デスクトップに「セカンド自動送信」フォルダ</b>が
-        できます。2日目からはそこを開くだけです。
+        セットアップが <b>C:\FSJ</b> に置いて、初期設定まで済ませます。<br>
+        終わると<b>デスクトップに「セカンド自動送信」フォルダ</b>ができるので、
+        2日目からはそこを開くだけです。<br>
+        <b>更新は自動</b>です。常駐起動のたびに新しい版があれば自分で取り込みます。
+      </div>
+      <div class="files" style="margin-top:10px">
+        <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回。Chromeも一緒に開きます</span></div>
+        <div class="file"><b>LINE用Chrome起動</b><span>Chromeだけ開きたいとき</span></div>
+        <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
       </div>
       <div class="sub local-only" style="margin-top:6px">
         <button class="btn" style="padding:3px 9px;font-size:11.5px"
@@ -198,8 +198,9 @@
     <div class="os">
       <div class="os-name">・Macの場合</div>
       <div class="sub">
-        解凍してできた「FSJセカンド自動送信」を開いて、その中の
-        <b>Mac</b> フォルダを使ってください。<br>
+        上のセットアップはWindows専用です。Macの方は
+        <a href="fsj-second-sender.zip" download>こちらのzip</a> を
+        ホームフォルダなどに解凍して、中の <b>Mac</b> フォルダを使ってください。<br>
         <b>最初の1回だけ</b>ターミナルを使います。「ターミナル」を開いて
         <code>bash&nbsp;</code> と入力し、Macフォルダの中の「はじめに実行.command」を
         ターミナルの窓にドラッグして Enter。<br>
