@@ -3,14 +3,23 @@ chcp 65001 >nul
 title FSJ Second Auto Sender - Setup
 
 rem One-file installer / updater.
-rem Downloads the package, places it in C:\FSJ and runs the first-run wizard.
+rem Downloads the package, places it in its own folder and runs the wizard.
 rem Running it again updates an existing install; personal settings are not
 rem in the package, so they are never overwritten.
 rem NOTE: keep this file ASCII-only. Japanese messages come from Python.
 
 set "URL=https://fsjjimu.github.io/dashboard/fsj-second-sender.zip"
-set "APP=C:\FSJ\fsj-second-sender"
 set "TMPZIP=%TEMP%\fsj-second-sender.zip"
+
+rem The install folder is named in Japanese, but this file must stay ASCII
+rem (Shift-JIS lead bytes collide with cmd metacharacters), so build the
+rem name from character codes.
+rem   30BB 30AB 30F3 30C9 = katakana SE KA N DO
+rem   81EA 52D5 9001 4FE1 = kanji  JI DOU SOU SHIN
+rem A plain "C:\FSJ" is not used: that folder already holds another system.
+set "APP="
+for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "[Console]::OutputEncoding=[Text.Encoding]::UTF8; 'C:\FSJ' + [string]::Join('',[char[]](0x30BB,0x30AB,0x30F3,0x30C9,0x81EA,0x52D5,0x9001,0x4FE1))"`) do set "APP=%%p"
+if "%APP%"=="" set "APP=C:\FSJ-SecondSender"
 
 echo.
 echo   FSJ Second Auto Sender
