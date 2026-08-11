@@ -138,23 +138,39 @@
   <!-- ═══ はじめて使う方へ ═══ -->
   <div class="card">
     <h2>はじめて使うとき</h2>
-    <div class="sub">この3つだけです。Pythonなどのインストールは要りません。</div>
+    <div class="sub">この4つだけです。Pythonなどのインストールは要りません。</div>
+
+    <div style="margin:12px 0 16px">
+      <a class="btn pri" href="fsj-second-sender.zip" download
+         style="font-size:14px;padding:9px 18px">一式をダウンロード（zip）</a>
+      <span class="sub" style="margin-left:10px">
+        解凍したら、好きな場所（デスクトップなど）に置いてください。
+      </span>
+    </div>
+
     <ol class="steps">
-      <li><b>はじめに実行</b> をダブルクリックして、名前を入力する（初回のみ）</li>
+      <li>上のボタンで <b>一式をダウンロード</b> して解凍する</li>
+      <li><b>はじめに実行</b> をダブルクリックして、
+          <b>名前</b>と<b>送信用キー</b>を入力する（初回のみ）</li>
       <li><b>LINE用Chrome起動</b> をダブルクリックして、自分のLINEにログインする</li>
       <li><b>セカンド自動送信_常駐起動</b> をダブルクリックする（出勤時に毎回）</li>
     </ol>
+    <div class="sub" style="margin:10px 0 0">
+      ※ <b>送信用キー</b>は管理者から受け取ってください。
+      このページの上で入れる「接続キー」とは別のものです。
+    </div>
     <div class="sub" style="margin:14px 0 6px">
       そのあと、このページで自分のトグルをONにすれば動き始めます。
     </div>
     <div class="files">
-      <div class="file"><b>はじめに実行.bat</b><span>初回セットアップ（名前を入れるだけ）</span></div>
-      <div class="file"><b>LINE用Chrome起動.bat</b><span>送信に使うChromeを開く</span></div>
-      <div class="file"><b>セカンド自動送信_常駐起動.bat</b><span>出勤時に1回ダブルクリック</span></div>
-      <div class="file"><b>セットアップ診断.bat</b><span>うまく動かないときに原因を調べる</span></div>
+      <div class="file"><b>はじめに実行</b><span>初回セットアップ（名前を入れるだけ）</span></div>
+      <div class="file"><b>LINE用Chrome起動</b><span>送信に使うChromeを開く</span></div>
+      <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回ダブルクリック</span></div>
+      <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
     </div>
     <div class="path">
-      置き場所: <b>FSJ関連 › セカンド自動送信</b> フォルダ
+      場所: 解凍した <b>FSJセカンド自動送信 › セカンド自動送信 › Windows</b>
+      （Macの方は <b>Mac</b> フォルダ）
       <span class="local-only">
         <button class="btn" style="padding:3px 9px;font-size:11.5px;margin-left:6px"
                 onclick="copyFolder()">パスをコピー</button>
@@ -162,7 +178,14 @@
       </span>
     </div>
     <div class="sub" style="margin-top:12px">
-      ※ Macの方は同じ名前の <code>.command</code> ファイルを使ってください。
+      「はじめに実行」を1回動かすと、<b>デスクトップに「セカンド自動送信」フォルダ</b>ができます。
+      2日目からは、共有フォルダをたどらずにそこから開いてください。
+    </div>
+    <div class="sub" style="margin-top:8px">
+      ※ Macの方は、<b>最初の1回だけ</b>ターミナルを使います。
+      「ターミナル」を開いて <code>bash&nbsp;</code> と入力し、Macフォルダの中の
+      「はじめに実行.command」をターミナルの窓にドラッグして Enter。
+      これ以降はデスクトップのフォルダからダブルクリックで使えます。
     </div>
   </div>
 
@@ -172,7 +195,7 @@
     <div class="sub">担当者の追加や、仕組みの詳細はこちらです。</div>
     <div class="links">
       <a class="btn pri" target="_blank"
-         href="https://docs.google.com/spreadsheets/d/12NDXPYgcO2NTNJV71x7kOMOWxD-NZnA-8tNichtupJ0/edit#gid=0">
+         href="https://docs.google.com/spreadsheets/d/19hV8je34i34H-ZrkiZx1FlICHNbzbozPobNiaSL3e9A/edit#gid=1362000030">
          LINE担当者マッピング</a>
       <a class="btn local-only" target="_blank"
          href="../手順書/LINE収集システム_業務手順書.pdf">業務手順書（PDF）</a>
@@ -316,22 +339,66 @@ function renderQueue(rows) {
 
 /* テストモードか本番かを画面の先頭に出す。
    設定はDBの1か所（app_settings）にあり、全員のPCが同じものを見る。 */
+let MODE = null;
+
 function renderMode(rows) {
   const el = document.getElementById("mode");
   el.style.display = "";
   if (!rows || !rows.length) {
+    MODE = null;
     el.className = "banner warn";
     el.textContent = "モード設定が読めません。送信側は安全のためテスト扱いで動きます。";
     return;
   }
-  const m = rows[0];
-  if (m.test_mode) {
-    el.className = "banner ok";
-    el.textContent = "テストモード中 — プレイヤーには送りません（"
-      + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）";
-  } else {
-    el.className = "banner live";
-    el.textContent = "★本番送信中 — 取得したプレイヤー本人へ実際にセカンドが送られます";
+  const m = MODE = rows[0];
+  el.className = "banner " + (m.test_mode ? "ok" : "live");
+
+  const text = document.createElement("span");
+  text.textContent = m.test_mode
+    ? "テストモード中 — プレイヤーには送りません（"
+      + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）"
+    : "★本番送信中 — 取得したプレイヤー本人へ実際にセカンドが送られます";
+
+  const btn = document.createElement("button");
+  btn.className = "btn";
+  btn.style.cssText = "padding:3px 10px;font-size:11.5px;white-space:nowrap";
+  btn.textContent = m.test_mode ? "本番送信に切り替える" : "テストモードに戻す";
+  btn.onclick = () => setMode(!m.test_mode);
+
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;align-items:center;gap:12px;"
+                    + "justify-content:space-between;flex-wrap:wrap";
+  row.append(text, btn);
+  el.innerHTML = "";
+  el.appendChild(row);
+}
+
+/* テスト⇔本番の切り替え。
+   本番へ向かうときだけ二重に確認する。取り返しがつかないのはその向きだけで、
+   テストへ戻すのはいつでも安全なため。 */
+async function setMode(toTest) {
+  if (!toTest) {
+    if (!confirm("本番送信に切り替えます。\n\n"
+        + "これ以降、案件を取得したプレイヤー本人へ、実際にセカンドが送られます。\n"
+        + "テスト送信ではありません。\n\nよろしいですか？")) return;
+    if (!confirm("もう一度確認します。\n本番送信に切り替えてよろしいですか？")) return;
+  }
+  const cur = MODE || {};
+  try {
+    const r = await fetch(SUPABASE_URL
+        + "/rest/v1/app_settings?key=eq.second_test_mode",
+      { method: "PATCH", headers: { ...hdr(), Prefer: "return=minimal" },
+        body: JSON.stringify({
+          value: { enabled: toTest,
+                   redirect_to: cur.redirect_to || "FSJ事務bot",
+                   report_room: cur.report_room || "テストトランジットROOM" },
+          updated_at: new Date().toISOString(),
+          updated_by: "画面" }) });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    load();
+  } catch (e) {
+    setBanner("warn", "モードの切り替えに失敗しました: " + e.message
+              + "（SQLの再実行がまだかもしれません）");
   }
 }
 
@@ -366,9 +433,11 @@ async function load() {
 }
 
 function copyFolder() {
+  const os = /Mac/i.test(navigator.platform || navigator.userAgent)
+             ? "Mac" : "Windows";
   const p = decodeURIComponent(location.href.replace(/\/[^/]*$/, ""))
               .replace(/^file:\/\/\//, "").replace(/\//g, "\\")
-              .replace(/ダッシュボード$/, "セカンド自動送信");
+              .replace(/ダッシュボード$/, "セカンド自動送信\\" + os);
   navigator.clipboard.writeText(p);
   document.getElementById("folder").textContent = p;
 }
