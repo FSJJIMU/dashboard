@@ -44,8 +44,11 @@
   .banner.ok   { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
   .banner.off  { background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; }
   .banner.warn { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-  .banner.live { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
-                 font-weight: 700; }
+  /* 赤は「いつもと違う状態」に使う。
+     通常運転（本番送信中）が緑で、テスト中＝セカンドが実際には届いていない
+     状態が赤。テストのまま放置されていることに気づけるようにするため。 */
+  .banner.alert { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b;
+                  font-weight: 700; }
 
   /* 状況 */
   .stats { display: flex; gap: 10px; flex-wrap: wrap; }
@@ -81,6 +84,10 @@
   .btn:hover { background: #f6f8fa; }
   .btn.pri { background: #2563eb; border-color: #2563eb; color: #fff; }
   .path { font-size: 12px; color: #6b7280; margin-top: 10px; word-break: break-all; }
+  /* OSごとの案内。自分に関係ある方だけ読めばよいことを見た目で示す */
+  .os { margin-top: 14px; padding-left: 12px; border-left: 3px solid #e5e7eb; }
+  .os-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .os .sub { margin: 0; }
 </style></head><body>
 
 <div class="top">
@@ -128,7 +135,6 @@
   <!-- ═══ 今日の状況 ═══ -->
   <div class="card">
     <h2>今日の状況</h2>
-    <div class="sub">案件の取得を検知してから、セカンドを送るまでの記録です。</div>
     <div class="stats" id="stats"></div>
     <table id="recent"><thead><tr>
       <th>時刻</th><th>案件番号</th><th>取得者</th><th>ルーム</th><th>状態</th>
@@ -138,9 +144,7 @@
   <!-- ═══ はじめて使う方へ ═══ -->
   <div class="card">
     <h2>はじめて使うとき</h2>
-    <div class="sub">この5つだけです。Pythonなどのインストールは要りません。</div>
-
-    <div style="margin:12px 0 16px">
+    <div style="margin:4px 0 16px">
       <a class="btn pri" href="fsj-second-sender.zip" download
          style="font-size:14px;padding:9px 18px">一式をダウンロード（zip）</a>
       <span class="sub" style="margin-left:10px">
@@ -149,6 +153,7 @@
     </div>
 
     <ol class="steps">
+      <li>このページの上で <b>接続キー</b> を入力する（初回のみ）</li>
       <li>上のボタンで <b>一式をダウンロード</b> して解凍する</li>
       <li><b>はじめに実行</b> をダブルクリックして、
           <b>名前</b>と<b>送信用キー</b>を入力する（初回のみ）</li>
@@ -166,24 +171,32 @@
       <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回ダブルクリック</span></div>
       <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
     </div>
-    <div class="path">
-      場所: 解凍した <b>FSJセカンド自動送信 › セカンド自動送信 › Windows</b>
-      （Macの方は <b>Mac</b> フォルダ）
-      <span class="local-only">
-        <button class="btn" style="padding:3px 9px;font-size:11.5px;margin-left:6px"
+    <div class="os">
+      <div class="os-name">・Windowsの場合</div>
+      <div class="sub">
+        解凍してできた「FSJセカンド自動送信」を開いて、その中の
+        <b>Windows</b> フォルダを使ってください。<br>
+        「はじめに実行」を1回動かすと、<b>デスクトップに「セカンド自動送信」フォルダ</b>が
+        できます。2日目からはそこを開くだけです。
+      </div>
+      <div class="sub local-only" style="margin-top:6px">
+        <button class="btn" style="padding:3px 9px;font-size:11.5px"
                 onclick="copyFolder()">パスをコピー</button>
         <span id="folder"></span>
-      </span>
+      </div>
     </div>
-    <div class="sub" style="margin-top:12px">
-      「はじめに実行」を1回動かすと、<b>デスクトップに「セカンド自動送信」フォルダ</b>ができます。
-      2日目からは、共有フォルダをたどらずにそこから開いてください。
-    </div>
-    <div class="sub" style="margin-top:8px">
-      ※ Macの方は、<b>最初の1回だけ</b>ターミナルを使います。
-      「ターミナル」を開いて <code>bash&nbsp;</code> と入力し、Macフォルダの中の
-      「はじめに実行.command」をターミナルの窓にドラッグして Enter。
-      これ以降はデスクトップのフォルダからダブルクリックで使えます。
+
+    <div class="os">
+      <div class="os-name">・Macの場合</div>
+      <div class="sub">
+        解凍してできた「FSJセカンド自動送信」を開いて、その中の
+        <b>Mac</b> フォルダを使ってください。<br>
+        <b>最初の1回だけ</b>ターミナルを使います。「ターミナル」を開いて
+        <code>bash&nbsp;</code> と入力し、Macフォルダの中の「はじめに実行.command」を
+        ターミナルの窓にドラッグして Enter。<br>
+        これ以降は<b>デスクトップにできる「セカンド自動送信」フォルダ</b>から
+        ダブルクリックで使えます。
+      </div>
     </div>
   </div>
 
@@ -349,13 +362,13 @@ function renderMode(rows) {
     return;
   }
   const m = MODE = rows[0];
-  el.className = "banner " + (m.test_mode ? "ok" : "live");
+  el.className = "banner " + (m.test_mode ? "alert" : "ok");
 
   const text = document.createElement("span");
   text.textContent = m.test_mode
     ? "テストモード中 — プレイヤーには送りません（"
       + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）"
-    : "★本番送信中 — 取得したプレイヤー本人へ実際にセカンドが送られます";
+    : "本番送信中";
 
   const btn = document.createElement("button");
   btn.className = "btn";
