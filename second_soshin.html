@@ -84,10 +84,33 @@
   .btn:hover { background: #f6f8fa; }
   .btn.pri { background: #2563eb; border-color: #2563eb; color: #fff; }
   .path { font-size: 12px; color: #6b7280; margin-top: 10px; word-break: break-all; }
-  /* OSごとの案内。自分に関係ある方だけ読めばよいことを見た目で示す */
-  .os { margin-top: 14px; padding-left: 12px; border-left: 3px solid #e5e7eb; }
-  .os-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-  .os .sub { margin: 0; }
+  /* OSごとの案内。どちらが主でも従でもないので、横に並べて同じ幅にする */
+  .osgrid { display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+            gap: 16px; margin-top: 12px; }
+  .oscol { border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 16px;
+           background: #fafbfc; }
+  .os-name { font-size: 13.5px; font-weight: 700; margin-bottom: 10px; }
+  .oscol .sub { margin: 10px 0 0; }
+  .oscol .steps { margin-top: 10px; }
+  .btn.dl { display: inline-block; text-decoration: none; font-size: 13.5px;
+            padding: 8px 16px; }
+
+  /* Chrome版LINEの設定画面の再現。写真ではなく作図なので、
+     拡大しても字がつぶれず、どの項目を指しているかが正確に伝わる */
+  .lineset { display: flex; border: 1px solid #e5e7eb; border-radius: 10px;
+             overflow: hidden; margin-top: 12px; background: #fff;
+             font-size: 12.5px; max-width: 640px; }
+  .ls-side { width: 132px; flex: none; background: #f7f8fa;
+             border-right: 1px solid #eceff3; padding: 10px 0; color: #6b7280; }
+  .ls-side div { padding: 7px 14px; }
+  .ls-side .on { background: #eef1f5; color: #1f2328; font-weight: 700; }
+  .ls-main { padding: 12px 16px 16px; flex: 1; }
+  .ls-h { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
+  .ls-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  .ls-row i { width: 13px; height: 13px; flex: none; border: 1px solid #c4cad2;
+              border-radius: 3px; background: #fff; }
+  .ls-row.off { color: #b6bcc4; }
+  .ls-row.off i { border-color: #dfe3e8; background: #f6f7f9; }
 </style></head><body>
 
 <div class="top">
@@ -153,60 +176,107 @@
   <!-- ═══ はじめて使う方へ ═══ -->
   <div class="card">
     <h2>はじめて使うとき</h2>
-    <div style="margin:4px 0 16px">
-      <a class="btn pri" href="fsj-setup.bat" download="FSJセカンド自動送信_セットアップ.bat"
-         style="font-size:14px;padding:9px 18px">セットアップをダウンロード</a>
-      <span class="sub" style="margin-left:10px">
-        ダウンロードした1つのファイルをダブルクリックするだけです。<br>
-        置き場所を作る・解凍する、といった作業は要りません。
-      </span>
+    <div class="sub" style="margin:4px 0 4px">
+      まず、このページの上で <b>接続キー</b> を入力してください（初回のみ・WindowsもMacも共通）。<br>
+      そのあと、お使いのパソコンの方を進めてください。
     </div>
 
-    <ol class="steps">
-      <li>このページの上で <b>接続キー</b> を入力する（初回のみ）</li>
-      <li>上のボタンのファイルを<b>ダブルクリック</b>する</li>
-      <li><b>名前</b>と<b>送信用キー</b>を入力し、続けて<b>LINEにログイン</b>する（初回のみ）</li>
-      <li>出勤したら <b>セカンド自動送信_常駐起動</b> をダブルクリック（毎回）</li>
-      <li>このページで<b>自分のトグルをON</b>にすれば動き始める</li>
-    </ol>
-    <div class="sub" style="margin:10px 0 0">
+    <div class="osgrid">
+      <div class="oscol">
+        <div class="os-name">Windows の場合</div>
+        <a class="btn pri dl" href="fsj-setup.bat"
+           download="FSJセカンド自動送信_セットアップ.bat">Windows用をダウンロード</a>
+        <ol class="steps">
+          <li>ダウンロードしたファイルを<b>ダブルクリック</b>する</li>
+          <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
+          <li>Chromeが開くので<b>LINEにログイン</b>する</li>
+          <li>デスクトップの「セカンド自動送信」から
+              <b>セカンド自動送信_常駐起動</b> をダブルクリック</li>
+          <li>このページで<b>自分のトグルをON</b></li>
+        </ol>
+        <div class="sub">
+          解凍も置き場所づくりも要りません。<b>C:\FSJセカンド自動送信</b> に
+          自動で配置され、初期設定まで進みます。<br>
+          ※ 警告が出たら「保存」、開くときは「詳細情報」→「実行」。
+        </div>
+        <div class="sub local-only" style="margin-top:6px">
+          <button class="btn" style="padding:3px 9px;font-size:11.5px"
+                  onclick="copyFolder()">パスをコピー</button>
+          <span id="folder"></span>
+        </div>
+      </div>
+
+      <div class="oscol">
+        <div class="os-name">Mac の場合</div>
+        <a class="btn pri dl" href="fsj-second-sender.zip" download>Mac用をダウンロード</a>
+        <ol class="steps">
+          <li>zipを<b>解凍</b>する（ホームフォルダなど）</li>
+          <li>「ターミナル」を開いて <code>bash&nbsp;</code> と入力し、
+              <b>Mac</b> フォルダの中の「はじめに実行.command」を
+              窓にドラッグして Enter</li>
+          <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
+          <li>Chromeが開くので<b>LINEにログイン</b>する</li>
+          <li>デスクトップの「セカンド自動送信」から
+              <b>セカンド自動送信_常駐起動</b> をダブルクリック</li>
+          <li>このページで<b>自分のトグルをON</b></li>
+        </ol>
+        <div class="sub">
+          ターミナルを使うのは<b>最初の1回だけ</b>です。以降はデスクトップの
+          フォルダからダブルクリックで使えます。
+        </div>
+      </div>
+    </div>
+
+    <div class="sub" style="margin-top:14px">
       ※ <b>送信用キー</b>は管理者から受け取ってください。
       このページの上で入れる「接続キー」とは別のものです。<br>
-      ※ ダウンロード時に警告が出たら「保存」、開くときは「詳細情報」→「実行」を選んでください。
+      ※ <b>更新は自動</b>です。常駐起動のたびに新しい版があれば自分で取り込みます。
     </div>
 
-    <div class="os">
-      <div class="os-name">・Windowsの場合</div>
-      <div class="sub">
-        セットアップが <b>C:\FSJセカンド自動送信</b> に置いて、初期設定まで済ませます。<br>
-        終わると<b>デスクトップに「セカンド自動送信」フォルダ</b>ができるので、
-        2日目からはそこを開くだけです。<br>
-        <b>更新は自動</b>です。常駐起動のたびに新しい版があれば自分で取り込みます。
+    <div class="files" style="margin-top:14px">
+      <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回。Chromeも一緒に開きます</span></div>
+      <div class="file"><b>LINE用Chrome起動</b><span>Chromeだけ開きたいとき</span></div>
+      <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
+    </div>
+  </div>
+
+  <!-- ═══ Chrome版LINEの推奨設定 ═══ -->
+  <div class="card">
+    <h2>Chrome版LINEの設定</h2>
+    <div class="sub">
+      送信用のChromeでは、<b>通知をすべてOFF</b>にしてください。
+      設定は歯車 →「通知」で開けます。
+    </div>
+
+    <div class="lineset">
+      <div class="ls-side">
+        <div>基本設定</div>
+        <div class="on">通知</div>
+        <div>トーク</div>
+        <div>友だち管理</div>
+        <div>ショートカット</div>
+        <div>LINE情報</div>
       </div>
-      <div class="files" style="margin-top:10px">
-        <div class="file"><b>セカンド自動送信_常駐起動</b><span>出勤時に1回。Chromeも一緒に開きます</span></div>
-        <div class="file"><b>LINE用Chrome起動</b><span>Chromeだけ開きたいとき</span></div>
-        <div class="file"><b>セットアップ診断</b><span>うまく動かないときに原因を調べる</span></div>
-      </div>
-      <div class="sub local-only" style="margin-top:6px">
-        <button class="btn" style="padding:3px 9px;font-size:11.5px"
-                onclick="copyFolder()">パスをコピー</button>
-        <span id="folder"></span>
+      <div class="ls-main">
+        <div class="ls-h">通知方法</div>
+        <div class="ls-row"><i></i>ポップアップ</div>
+        <div class="ls-row"><i></i>サウンド</div>
+        <div class="ls-row off"><i></i>ポップアップでメッセージ内容を表示</div>
+
+        <div class="ls-h" style="margin-top:16px">通知ルール</div>
+        <div class="ls-row off"><i></i>新しいメッセージ受信時に通知</div>
+        <div class="ls-row off"><i></i>自分がメンションされると通知</div>
+        <div class="ls-row off"><i></i>グループへの招待時および新規メンバー参加時に通知</div>
+        <div class="ls-row"><i></i>Chrome版を使用している場合はスマートフォン版への通知をオフ</div>
       </div>
     </div>
 
-    <div class="os">
-      <div class="os-name">・Macの場合</div>
-      <div class="sub">
-        上のセットアップはWindows専用です。Macの方は
-        <a href="fsj-second-sender.zip" download>こちらのzip</a> を
-        ホームフォルダなどに解凍して、中の <b>Mac</b> フォルダを使ってください。<br>
-        <b>最初の1回だけ</b>ターミナルを使います。「ターミナル」を開いて
-        <code>bash&nbsp;</code> と入力し、Macフォルダの中の「はじめに実行.command」を
-        ターミナルの窓にドラッグして Enter。<br>
-        これ以降は<b>デスクトップにできる「セカンド自動送信」フォルダ</b>から
-        ダブルクリックで使えます。
-      </div>
+    <div class="sub" style="margin-top:12px">
+      <b>すべてチェックを外した状態</b>が正解です。理由は2つあります。<br>
+      ・自動送信が動くたびにポップアップと音が出て、作業の邪魔になります。<br>
+      ・一番下の「スマートフォン版への通知をオフ」は<b>チェックを入れてはいけません</b>。
+        入れると自分のスマホにLINE通知が届かなくなります。事務員個人のアカウントなので、
+        私生活の連絡まで来なくなります。
     </div>
   </div>
 
