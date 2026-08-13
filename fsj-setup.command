@@ -77,13 +77,48 @@ xattr -dr com.apple.quarantine "$APP" 2>/dev/null
 chmod +x "$APP"/Mac/*.command 2>/dev/null
 
 # ── 足りない部品を入れる ──
-# Windowsは python-embed に同梱しているが、Macは同梱できないためここで入れる。
-if ! python3 -c "import websocket" >/dev/null 2>&1; then
-  say "  [3/4] 必要な部品を入れています（1分ほどかかることがあります）..."
-  python3 -m pip install --user --quiet websocket-client >/dev/null 2>&1 || \
-    say "      [!] 自動で入りませんでした。あとで「セットアップ診断」に従ってください。"
-else
+#
+# ★FSJ専用の入れ物（.venv）を作ってそこに入れる。本体のPythonには触らない。
+#   Macの python3 に直接 pip install しようとすると、環境によって必ず拒否される:
+#     ・Homebrew版 … --user 指定を受け付けない（user site が無効化されている）
+#     ・python.org版/システム版 … PEP 668 で「外部管理」扱いになり弾かれる
+#   実際にこれで websocket-client が入らなかった。専用の入れ物なら
+#   どちらの制限も掛からず、本体のPythonを汚さない。
+#   Windowsで python-embed を同梱しているのと同じ考え方。
+VENV="$APP/.venv"
+PY=""
+
+if "$VENV/bin/python3" -c "import websocket" >/dev/null 2>&1; then
   say "  [3/4] 必要な部品は入っています。"
+  PY="$VENV/bin/python3"
+else
+  say "  [3/4] 必要な部品を入れています（1分ほどかかることがあります）..."
+  ERR=""
+  if ERR="$(python3 -m venv "$VENV" 2>&1)" && [ -x "$VENV/bin/python3" ]; then
+    if ERR="$("$VENV/bin/python3" -m pip install --quiet \
+                --disable-pip-version-check websocket-client 2>&1)"; then
+      PY="$VENV/bin/python3"
+    fi
+  fi
+  # 入れ物すら作れないMacのための逃げ道。ここまで来ることは滅多にない。
+  if [ -z "$PY" ]; then
+    for opt in "--user" "--user --break-system-packages"; do
+      # shellcheck disable=SC2086
+      if ERR="$(python3 -m pip install --quiet $opt websocket-client 2>&1)"; then
+        PY="$(command -v python3)"
+        break
+      fi
+    done
+  fi
+  if [ -n "$PY" ]; then
+    say "      入りました。"
+  else
+    # ★理由を隠さない。前は握り潰していたので、何が起きたのか分からなかった。
+    say "      [!] 自動で入りませんでした。理由:"
+    printf '%s\n' "$ERR" | tail -4 | sed 's/^/          /'
+    say "      このまま設定は進めます（送信はできます）。"
+    PY="$(command -v python3)"
+  fi
 fi
 
 # ── 設定へ ──
@@ -93,7 +128,7 @@ cd "$APP" || die "フォルダに入れませんでした: $APP"
 
 # ★ < /dev/tty が必須。付けないと、このスクリプト自身（パイプ）を
 #   入力として読んでしまい、名前もキーも空のまま通り抜ける。
-python3 -X utf8 scripts/setup_wizard.py < /dev/tty
+"$PY" -X utf8 scripts/setup_wizard.py < /dev/tty
 
 say ""
 [ -e /dev/tty ] && read -r -p "  Enterで閉じます" _ < /dev/tty
