@@ -78,9 +78,11 @@
   .file b { display: block; font-size: 13px; }
   .file span { font-size: 11.5px; color: #6b7280; }
   .links { display: flex; gap: 10px; flex-wrap: wrap; }
+  /* a でも button でも同じ見た目にする（Macは押すとコピーするので button） */
   .btn { display: inline-block; text-decoration: none; font-size: 13px;
          border: 1px solid #d7dce2; border-radius: 8px; padding: 9px 14px;
-         background: #fff; color: #1f2328; }
+         background: #fff; color: #1f2328;
+         font-family: inherit; line-height: 1.4; cursor: pointer; }
   .btn:hover { background: #f6f8fa; }
   .btn.pri { background: #2563eb; border-color: #2563eb; color: #fff; }
   .path { font-size: 12px; color: #6b7280; margin-top: 10px; word-break: break-all; }
@@ -208,12 +210,14 @@
 
       <div class="oscol">
         <div class="os-name">Mac の場合</div>
-        <a class="btn pri dl" href="fsj-second-sender.zip" download>Mac用をダウンロード</a>
+        <button class="btn pri dl" id="maccmd" onclick="copyMacCmd()">
+          セットアップの1行をコピー</button>
         <ol class="steps">
-          <li>zipを<b>解凍</b>する（ダウンロードフォルダのままでOK）</li>
-          <li><b>Mac</b> フォルダの中の「はじめに実行.command」を
-              <b>右クリック →「開く」</b>
-              <span class="sub">（初回だけ警告が出るので、もう一度「開く」）</span></li>
+          <li>上のボタンで<b>1行をコピー</b>する</li>
+          <li><b>ターミナル</b>を開く
+              <span class="sub">（Finder → アプリケーション → ユーティリティ、
+              または <code>⌘</code>+<code>スペース</code> で「ターミナル」と入力）</span></li>
+          <li><code>⌘</code>+<code>V</code> で<b>貼り付けて Enter</b></li>
           <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
           <li>Chromeが開くので<b>LINEにログイン</b>する</li>
           <li>デスクトップの「セカンド自動送信」から
@@ -221,23 +225,22 @@
           <li>このページで<b>自分のトグルをON</b></li>
         </ol>
         <div class="sub">
-          <b>ターミナルは使いません。</b>2回目からはデスクトップのフォルダから
-          そのままダブルクリックで開けます。<br>
-          ※ 右クリックで「開く」が要るのは<b>初回だけ</b>です。
-          インターネットから落としたファイルに対するMacの確認です。
+          ダウンロードも解凍も要りません。ホームフォルダ
+          （Finderのサイドバーの<b>家のマーク</b>）の中の
+          <b>FSJセカンド自動送信</b> に自動で配置され、初期設定まで進みます。<br>
+          <b>ターミナルを使うのは、この1回だけ</b>です。
+          2回目からはデスクトップのフォルダをダブルクリックで開けます。
         </div>
         <details class="sub" style="margin-top:8px">
-          <summary style="cursor:pointer">「開けません」と出てしまうとき</summary>
+          <summary style="cursor:pointer">なぜMacだけターミナルなの？</summary>
           <div style="margin-top:6px">
-            解凍ソフトによっては、ファイルの実行許可が外れることがあります。
-            そのときだけターミナルを使ってください。<br>
-            1. 「ターミナル」を開く<br>
-            2. <code>chmod +x&nbsp;</code> と入力する
-               （<b>ここでEnterは押さない</b>。最後の空白まで入れる）<br>
-            3. <b>Mac</b> フォルダの中の「はじめに実行.command」を
-               ターミナルの窓にドラッグする<br>
-            4. そこで Enter を押す<br>
-            そのあと、あらためて右クリック →「開く」で起動します。
+            macOS 15（Sequoia）から、インターネットから落とした
+            アプリやスクリプトは、右クリック →「開く」でも実行できなく
+            なりました。<br>
+            「<b>マルウェアが含まれていないことを検証できませんでした</b>」と出て、
+            システム設定で1つずつ許可しないと開けません。<br>
+            上の1行は、ファイルとして保存せずに直接実行するので、
+            この確認そのものが起きません。
           </div>
         </details>
       </div>
@@ -537,6 +540,27 @@ async function load() {
     if (q.ok) renderQueue(await q.json());
     renderMode(m.ok ? await m.json() : null);
   } catch (e) { setBanner("warn", "接続に失敗しました: " + e.message); }
+}
+
+/* Mac のセットアップ1行。
+   ブラウザに落とさせず curl から bash に直接渡す。
+   落とすと com.apple.quarantine が付き、macOS 15 以降は
+   右クリック →「開く」でも実行できない（Appleが抜け道を廃止した）。 */
+const MAC_CMD =
+  "curl -fsSL https://fsjjimu.github.io/dashboard/fsj-setup.command | bash";
+
+function copyMacCmd() {
+  const b = document.getElementById("maccmd");
+  navigator.clipboard.writeText(MAC_CMD).then(() => {
+    b.textContent = "コピーしました ✓";
+    setTimeout(() => { b.textContent = "セットアップの1行をコピー"; }, 2000);
+  }).catch(() => {
+    /* file:// では clipboard が使えないことがある。手で選べるように出す。 */
+    b.insertAdjacentHTML("afterend",
+      '<div class="sub" style="margin-top:8px;word-break:break-all">' +
+      '<code>' + MAC_CMD + '</code></div>');
+    b.textContent = "↓この1行をコピーしてください";
+  });
 }
 
 function copyFolder() {
