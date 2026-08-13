@@ -210,10 +210,10 @@
         <div class="os-name">Mac の場合</div>
         <a class="btn pri dl" href="fsj-second-sender.zip" download>Mac用をダウンロード</a>
         <ol class="steps">
-          <li>zipを<b>解凍</b>する（ホームフォルダなど）</li>
-          <li>「ターミナル」を開いて <code>bash&nbsp;</code> と入力し、
-              <b>Mac</b> フォルダの中の「はじめに実行.command」を
-              窓にドラッグして Enter</li>
+          <li>zipを<b>解凍</b>する（ダウンロードフォルダのままでOK）</li>
+          <li><b>Mac</b> フォルダの中の「はじめに実行.command」を
+              <b>右クリック →「開く」</b>
+              <span class="sub">（初回だけ警告が出るので、もう一度「開く」）</span></li>
           <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
           <li>Chromeが開くので<b>LINEにログイン</b>する</li>
           <li>デスクトップの「セカンド自動送信」から
@@ -221,9 +221,25 @@
           <li>このページで<b>自分のトグルをON</b></li>
         </ol>
         <div class="sub">
-          ターミナルを使うのは<b>最初の1回だけ</b>です。以降はデスクトップの
-          フォルダからダブルクリックで使えます。
+          <b>ターミナルは使いません。</b>2回目からはデスクトップのフォルダから
+          そのままダブルクリックで開けます。<br>
+          ※ 右クリックで「開く」が要るのは<b>初回だけ</b>です。
+          インターネットから落としたファイルに対するMacの確認です。
         </div>
+        <details class="sub" style="margin-top:8px">
+          <summary style="cursor:pointer">「開けません」と出てしまうとき</summary>
+          <div style="margin-top:6px">
+            解凍ソフトによっては、ファイルの実行許可が外れることがあります。
+            そのときだけターミナルを使ってください。<br>
+            1. 「ターミナル」を開く<br>
+            2. <code>chmod +x&nbsp;</code> と入力する
+               （<b>ここでEnterは押さない</b>。最後の空白まで入れる）<br>
+            3. <b>Mac</b> フォルダの中の「はじめに実行.command」を
+               ターミナルの窓にドラッグする<br>
+            4. そこで Enter を押す<br>
+            そのあと、あらためて右クリック →「開く」で起動します。
+          </div>
+        </details>
       </div>
     </div>
 
