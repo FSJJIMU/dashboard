@@ -97,27 +97,17 @@
   .btn.dl { display: inline-block; text-decoration: none; font-size: 13.5px;
             padding: 8px 16px; }
 
-  /* Chrome版LINEの設定画面の再現。写真ではなく作図なので、
-     拡大しても字がつぶれず、どの項目を指しているかが正確に伝わる */
-  .lineset { display: flex; border: 1px solid #e5e7eb; border-radius: 10px;
-             overflow: hidden; margin-top: 12px; background: #fff;
-             font-size: 12.5px; max-width: 640px; }
-  .ls-side { width: 132px; flex: none; background: #f7f8fa;
-             border-right: 1px solid #eceff3; padding: 10px 0; color: #6b7280; }
-  .ls-side div { padding: 7px 14px; }
-  .ls-side .on { background: #eef1f5; color: #1f2328; font-weight: 700; }
-  .ls-main { padding: 12px 16px 16px; flex: 1; }
-  .ls-h { font-size: 12px; color: #6b7280; margin-bottom: 8px; }
-  .ls-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-  .ls-row i { width: 13px; height: 13px; flex: none; border: 1px solid #c4cad2;
-              border-radius: 3px; background: #fff; }
-  .ls-row.off { color: #b6bcc4; }
-  .ls-row.off i { border-color: #dfe3e8; background: #f6f7f9; }
+  /* Chrome版LINEの設定画面（注釈入りスクショ）。
+     幅は640pxまでだが画像は1200pxあるので、拡大しても字がつぶれない。
+     height/width を書いておくと、読み込み前に場所を確保して
+     下の内容が飛び跳ねない。 */
+  .lineshot { display: block; margin-top: 12px; max-width: 640px; width: 100%;
+              height: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
 </style></head><body>
 
 <div class="top">
   <h1>セカンド自動送信</h1>
-  <a class="back" href="index.html">← ダッシュボードに戻る</a>
+  <a class="back" href="index.html">ダッシュボードに戻る</a>
 </div>
 
 <div class="wrap">
@@ -129,9 +119,9 @@
 
   <!-- ═══ 送信担当 ═══ -->
   <div class="card">
-    <h2>送信担当</h2>
+    <h2>送信担当者</h2>
     <div class="sub">
-      ONにした人のPCから、その人のLINEアカウントでセカンドが送られます。<br>
+      トグルをONにした人のPCから、その人のLINEアカウントでセカンドが自動送信されます。<br>
       ONにできるのは1人だけで、交代時は入る人がONにすれば前の人は自動でOFFになります。
     </div>
     <div id="banner" class="banner off">状態を確認しています…</div>
@@ -178,7 +168,9 @@
   <!-- ═══ はじめて使う方へ ═══ -->
   <div class="card">
     <h2>はじめて使うとき</h2>
-    <div class="sub" style="margin:4px 0 4px">
+    <!-- 接続キーを入れ終わった人には出さない。済んだ作業が残っていると
+         「まだ何かやることがある」と思わせてしまう。 -->
+    <div class="sub" id="keyFirst" style="margin:4px 0 4px;display:none">
       まず、このページの上で <b>接続キー</b> を入力してください（初回のみ・WindowsもMacも共通）。<br>
       そのあと、お使いのパソコンの方を進めてください。
     </div>
@@ -191,16 +183,11 @@
         <ol class="steps">
           <li>ダウンロードしたファイルを<b>ダブルクリック</b>する</li>
           <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
-          <li>Chromeが開くので<b>LINEにログイン</b>する</li>
+          <li>Chromeが開くので<b>Chrome版LINEにログイン</b>する</li>
           <li>デスクトップの「セカンド自動送信」から
               <b>セカンド自動送信_常駐起動</b> をダブルクリック</li>
           <li>このページで<b>自分のトグルをON</b></li>
         </ol>
-        <div class="sub">
-          解凍も置き場所づくりも要りません。<b>C:\FSJセカンド自動送信</b> に
-          自動で配置され、初期設定まで進みます。<br>
-          ※ 警告が出たら「保存」、開くときは「詳細情報」→「実行」。
-        </div>
         <div class="sub local-only" style="margin-top:6px">
           <button class="btn" style="padding:3px 9px;font-size:11.5px"
                   onclick="copyFolder()">パスをコピー</button>
@@ -211,7 +198,7 @@
       <div class="oscol">
         <div class="os-name">Mac の場合</div>
         <button class="btn pri dl" id="maccmd" onclick="copyMacCmd()">
-          セットアップの1行をコピー</button>
+          スクリプトをコピー</button>
         <ol class="steps">
           <li>上のボタンで<b>1行をコピー</b>する</li>
           <li><b>ターミナル</b>を開く
@@ -219,37 +206,17 @@
               または <code>⌘</code>+<code>スペース</code> で「ターミナル」と入力）</span></li>
           <li><code>⌘</code>+<code>V</code> で<b>貼り付けて Enter</b></li>
           <li><b>名前</b>と<b>送信用キー</b>を入力する</li>
-          <li>Chromeが開くので<b>LINEにログイン</b>する</li>
+          <li>Chromeが開くので<b>Chrome版LINEにログイン</b>する</li>
           <li>デスクトップの「セカンド自動送信」から
               <b>セカンド自動送信_常駐起動</b> をダブルクリック</li>
           <li>このページで<b>自分のトグルをON</b></li>
         </ol>
-        <div class="sub">
-          ダウンロードも解凍も要りません。ホームフォルダ
-          （Finderのサイドバーの<b>家のマーク</b>）の中の
-          <b>FSJセカンド自動送信</b> に自動で配置され、初期設定まで進みます。<br>
-          <b>ターミナルを使うのは、この1回だけ</b>です。
-          2回目からはデスクトップのフォルダをダブルクリックで開けます。
-        </div>
-        <details class="sub" style="margin-top:8px">
-          <summary style="cursor:pointer">なぜMacだけターミナルなの？</summary>
-          <div style="margin-top:6px">
-            macOS 15（Sequoia）から、インターネットから落とした
-            アプリやスクリプトは、右クリック →「開く」でも実行できなく
-            なりました。<br>
-            「<b>マルウェアが含まれていないことを検証できませんでした</b>」と出て、
-            システム設定で1つずつ許可しないと開けません。<br>
-            上の1行は、ファイルとして保存せずに直接実行するので、
-            この確認そのものが起きません。
-          </div>
-        </details>
       </div>
     </div>
 
     <div class="sub" style="margin-top:14px">
-      ※ <b>送信用キー</b>は管理者から受け取ってください。
-      このページの上で入れる「接続キー」とは別のものです。<br>
-      ※ <b>更新は自動</b>です。常駐起動のたびに新しい版があれば自分で取り込みます。
+      ※ <b>接続キー</b>と<b>送信用キー</b>は管理者から受け取ってください。<br>
+      ※ <b>更新は自動</b>です。常駐起動のたびに新しいバージョンがあれば自動で最新版になります。
     </div>
 
     <div class="files" style="margin-top:14px">
@@ -263,46 +230,22 @@
   <div class="card">
     <h2>Chrome版LINEの設定</h2>
     <div class="sub">
-      送信用のChromeでは、<b>通知をすべてOFF</b>にしてください。
-      設定は歯車 →「通知」で開けます。
+      送信用のChrome版LINEでは、<b>通知をすべてOFF</b>にすることをおすすめします。<br>
+      一番下の「スマートフォン版への通知をオフ」は<b>チェックを入れてはいけません</b>。
+      入れると自分のスマホにLINE通知が届かなくなります。
     </div>
 
-    <div class="lineset">
-      <div class="ls-side">
-        <div>基本設定</div>
-        <div class="on">通知</div>
-        <div>トーク</div>
-        <div>友だち管理</div>
-        <div>ショートカット</div>
-        <div>LINE情報</div>
-      </div>
-      <div class="ls-main">
-        <div class="ls-h">通知方法</div>
-        <div class="ls-row"><i></i>ポップアップ</div>
-        <div class="ls-row"><i></i>サウンド</div>
-        <div class="ls-row off"><i></i>ポップアップでメッセージ内容を表示</div>
-
-        <div class="ls-h" style="margin-top:16px">通知ルール</div>
-        <div class="ls-row off"><i></i>新しいメッセージ受信時に通知</div>
-        <div class="ls-row off"><i></i>自分がメンションされると通知</div>
-        <div class="ls-row off"><i></i>グループへの招待時および新規メンバー参加時に通知</div>
-        <div class="ls-row"><i></i>Chrome版を使用している場合はスマートフォン版への通知をオフ</div>
-      </div>
-    </div>
-
-    <div class="sub" style="margin-top:12px">
-      <b>すべてチェックを外した状態</b>が正解です。理由は2つあります。<br>
-      ・自動送信が動くたびにポップアップと音が出て、作業の邪魔になります。<br>
-      ・一番下の「スマートフォン版への通知をオフ」は<b>チェックを入れてはいけません</b>。
-        入れると自分のスマホにLINE通知が届かなくなります。事務員個人のアカウントなので、
-        私生活の連絡まで来なくなります。
-    </div>
+    <!-- 実画面のスクショ。どこを押すかを矢印で示してあるので、
+         作図より迷いにくい。1200pxで置いて640pxで見せているのは、
+         拡大しても字がつぶれないようにするため。 -->
+    <img class="lineshot" src="line-notification-settings.jpg" width="1200" height="734"
+         alt="Chrome版LINEの設定画面。左下の「…」から「通知」を開き、
+              通知方法と通知ルールのチェックをすべて外した状態。">
   </div>
 
   <!-- ═══ 関連 ═══ -->
   <div class="card">
-    <h2>関連ページ・資料</h2>
-    <div class="sub">担当者の追加や、仕組みの詳細はこちらです。</div>
+    <h2>設定・関連ページ</h2>
     <div class="links">
       <a class="btn pri" target="_blank"
          href="https://docs.google.com/spreadsheets/d/19hV8je34i34H-ZrkiZx1FlICHNbzbozPobNiaSL3e9A/edit#gid=1362000030">
@@ -338,8 +281,18 @@ function saveKey() {
   if (!v) return;
   localStorage.setItem(KEY_STORE, v);
   SUPABASE_ANON_KEY = v;
-  document.getElementById("keySetup").style.display = "none";
+  showKeyPrompt(false);
   load();
+}
+
+/* 接続キーの入力欄と、下の「まず接続キーを…」の1行をまとめて出し入れする。
+   済んだ人に残っていると「まだ何かやることがある」と読めてしまう。
+   2か所を別々に切り替えると、片方だけ消し忘れる。 */
+function showKeyPrompt(show) {
+  for (const id of ["keySetup", "keyFirst"]) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? "" : "none";
+  }
 }
 
 function clearKey() {
@@ -464,10 +417,31 @@ function renderMode(rows) {
   el.className = "banner " + (m.test_mode ? "alert" : "ok");
 
   const text = document.createElement("span");
-  text.textContent = m.test_mode
+  text.style.cssText = "display:flex;align-items:center;gap:8px";
+  // アイコンは形だけで本番かテストかが分かるようにするため。色（緑/赤）だけだと
+  // 手掛かりが色ひとつになる。塗りは currentColor なのでバナーの文字色に揃う。
+  const icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("width", "16");
+  icon.setAttribute("height", "16");
+  icon.setAttribute("fill", "currentColor");
+  icon.setAttribute("aria-hidden", "true");
+  icon.style.flex = "none";
+  const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  path.setAttribute("d", m.test_mode
+    ? "M8.9 2.1 15.4 13a1 1 0 0 1-.9 1.5H1.5a1 1 0 0 1-.9-1.5L7.1 2.1a1 1 0"
+      + " 0 1 1.8 0zM8 5.5a.9.9 0 0 0-.9 1l.25 3a.65.65 0 0 0 1.3 0l.25-3A.9.9"
+      + " 0 0 0 8 5.5zm0 6.9a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"
+    : "M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.8 5.9-4.4 5.2a1 1 0 0 1-1.5.05L3.7"
+      + " 8.8a1 1 0 1 1 1.4-1.4l1.4 1.4 3.7-4.3a1 1 0 1 1 1.5 1.3z");
+  icon.appendChild(path);
+  text.appendChild(icon);
+  // ★本文は必ず createTextNode で入れる。redirect_to はDBから来る値なので、
+  //   innerHTML に混ぜるとページに任意のHTMLを差し込まれる余地ができる。
+  text.appendChild(document.createTextNode(m.test_mode
     ? "テストモード中 — プレイヤーには送りません（"
       + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）"
-    : "本番送信中";
+    : "本番送信中"));
 
   const btn = document.createElement("button");
   btn.className = "btn";
@@ -513,13 +487,12 @@ async function setMode(toTest) {
 }
 
 async function load() {
-  const setup = document.getElementById("keySetup");
   if (!SUPABASE_ANON_KEY) {
-    setup.style.display = "";
+    showKeyPrompt(true);
     setBanner("off", "接続キーを設定すると、送信担当の切り替えと状況表示ができます。");
     return;
   }
-  setup.style.display = "none";
+  showKeyPrompt(false);
   try {
     const [s, q, m] = await Promise.all([
       fetch(SUPABASE_URL + "/rest/v1/staff?active=eq.true&select=staff_key,"
@@ -533,7 +506,7 @@ async function load() {
       localStorage.removeItem(KEY_STORE);
       SUPABASE_ANON_KEY = "";
       setBanner("warn", "接続キーが正しくないようです。入れ直してください。");
-      document.getElementById("keySetup").style.display = "";
+      showKeyPrompt(true);
       return;
     }
     if (s.ok) renderStaff(await s.json());
@@ -553,7 +526,7 @@ function copyMacCmd() {
   const b = document.getElementById("maccmd");
   navigator.clipboard.writeText(MAC_CMD).then(() => {
     b.textContent = "コピーしました ✓";
-    setTimeout(() => { b.textContent = "セットアップの1行をコピー"; }, 2000);
+    setTimeout(() => { b.textContent = "スクリプトをコピー"; }, 2000);
   }).catch(() => {
     /* file:// では clipboard が使えないことがある。手で選べるように出す。 */
     b.insertAdjacentHTML("afterend",
