@@ -145,15 +145,6 @@
     </div>
 
     <div class="staff" id="staffList"></div>
-
-    <!-- 接続キーを入れただけの人が「自分の名前が無い」と迷うため、
-         登録が別の手順であることをその場で示す。 -->
-    <div class="sub" style="margin-top:12px">
-      ここに出るのは、<b>セットアップが済んだ人だけ</b>です。<br>
-      自分の名前が無い場合は、下の「はじめて使うとき」を上から進めてください。
-      「はじめに実行」を動かすと、ここに追加されます。<br>
-      <b>自分の名前が出るまで、他の人のトグルは触らないでください。</b>
-    </div>
   </div>
 
   <!-- ═══ 今日の状況 ═══ -->
@@ -311,7 +302,15 @@ function hdr() {
            Authorization: "Bearer " + SUPABASE_ANON_KEY,
            "Content-Type": "application/json" };
 }
-function setBanner(cls, text) { banner.className = "banner " + cls; banner.textContent = text; }
+function setBanner(cls, text) {
+  banner.style.display = "";
+  banner.className = "banner " + cls;
+  banner.textContent = text;
+}
+/* 平常時（担当者がいて、そのPCも動いている）は隠す。
+   同じ内容がモード表示にも出るので、2か所に同じ文を並べない。
+   ここに何か出ていたら「手当てが要る状態」だと分かるようにする。 */
+function hideBanner() { banner.style.display = "none"; }
 
 /* クライアントが動いているか。2分以内に生存報告があれば稼働中。 */
 function pcUp(s) {
@@ -321,12 +320,18 @@ function pcUp(s) {
 
 function renderStaff(list) {
   const duty = list.find(s => s.auto_send);
-  if (!duty) setBanner("off", "OFF — 誰も送信担当になっていません（手動で送ってください）");
+  if (!duty)
+    DUTY = { level: "off",
+             text: "誰も送信担当者になっていません（手動で送ってください）" };
   else if (!pcUp(duty))
-    setBanner("warn", duty.display_name
-      + " さんが送信担当ですが、PCで「セカンド自動送信_常駐起動」が動いていません。"
-      + "起動するまで送信されません。");
-  else setBanner("ok", duty.display_name + " さんのPCから自動送信しています。");
+    DUTY = { level: "warn",
+             text: duty.display_name
+               + " さんが送信担当者ですが、PCで「セカンド自動送信_常駐起動」が"
+               + "動いていません。起動するまで送信されません。" };
+  else
+    DUTY = { level: "ok",
+             text: duty.display_name + " さんのPCから自動送信しています。" };
+  paint();
 
   staffList.innerHTML = "";
   list.forEach(s => {
@@ -403,17 +408,32 @@ function renderQueue(rows) {
 /* テストモードか本番かを画面の先頭に出す。
    設定はDBの1か所（app_settings）にあり、全員のPCが同じものを見る。 */
 let MODE = null;
+let MODE_LOADED = false;
+let DUTY = null;        // {level, text} 送信担当者の状況
 
 function renderMode(rows) {
+  MODE = (rows && rows.length) ? rows[0] : null;
+  MODE_LOADED = true;
+  paint();
+}
+
+/* 上のモード表示と、下の状態表示を、まとめてここで決める。
+   ★2つの表示は連動する（担当者が正常ならモード表示に出し、下は隠す）。
+     別々に書き換えると、呼ばれる順で結果が変わる。実際、モード設定が
+     読めないときに担当者の表示ごと消える不具合が出た。 */
+function paint() {
+  if (!MODE_LOADED) return;
+  const m = MODE;
   const el = document.getElementById("mode");
   el.style.display = "";
-  if (!rows || !rows.length) {
-    MODE = null;
+
+  if (!m) {
     el.className = "banner warn";
     el.textContent = "モード設定が読めません。送信側は安全のためテスト扱いで動きます。";
+    // モード表示が警告で埋まるので、担当者は下に出す
+    if (DUTY) setBanner(DUTY.level, DUTY.text);
     return;
   }
-  const m = MODE = rows[0];
   el.className = "banner " + (m.test_mode ? "alert" : "ok");
 
   const text = document.createElement("span");
@@ -438,10 +458,23 @@ function renderMode(rows) {
   text.appendChild(icon);
   // ★本文は必ず createTextNode で入れる。redirect_to はDBから来る値なので、
   //   innerHTML に混ぜるとページに任意のHTMLを差し込まれる余地ができる。
-  text.appendChild(document.createTextNode(m.test_mode
-    ? "テストモード中 — プレイヤーには送りません（"
-      + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します）"
-    : "本番送信中"));
+  const onDuty = DUTY && DUTY.level === "ok";
+  text.appendChild(document.createTextNode(
+    (m.test_mode ? "テストモード中" : "本番送信中")
+    + (onDuty ? " — " + DUTY.text : "")));
+
+  // テスト中は「どこへ送られるのか」まで書かないと確かめようがない。
+  // ただし見出しに続けると長いので、下に小さく置く。
+  const left = document.createElement("div");
+  left.appendChild(text);
+  if (m.test_mode) {
+    const note = document.createElement("div");
+    note.style.cssText = "font-weight:400;font-size:12px;margin-top:3px;"
+                       + "padding-left:24px";   // アイコン16px + 隙間8px の分
+    note.textContent = "プレイヤーには送りません。"
+      + (m.redirect_to || "FSJ事務bot") + " に送って動作だけ確認します。";
+    left.appendChild(note);
+  }
 
   const btn = document.createElement("button");
   btn.className = "btn";
@@ -452,9 +485,14 @@ function renderMode(rows) {
   const row = document.createElement("div");
   row.style.cssText = "display:flex;align-items:center;gap:12px;"
                     + "justify-content:space-between;flex-wrap:wrap";
-  row.append(text, btn);
+  row.append(left, btn);
   el.innerHTML = "";
   el.appendChild(row);
+
+  // 平常時はモード表示に出し切っているので、下は隠す。
+  // ここに何か出ていたら「手当てが要る状態」だと分かるようにするため。
+  if (onDuty) hideBanner();
+  else if (DUTY) setBanner(DUTY.level, DUTY.text);
 }
 
 /* テスト⇔本番の切り替え。
