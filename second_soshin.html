@@ -381,8 +381,12 @@ function renderQueue(rows) {
   const t = rows.filter(r => new Date(r.detected_at) >= today);
   const by = k => t.filter(r => r.status === k).length;
   statsEl.innerHTML = "";
+  /* ★「誤リプライ」を独立して出す。
+     これが無いと、検知の数だけ増えて送信済みと合わず、
+     「送れていない案件がある」と誤解される。 */
   [["検知", t.length], ["送信済み", by("sent")], ["テスト", by("test")],
-   ["送信待ち", by("pending")], ["失敗", by("failed")]].forEach(([label, n]) => {
+   ["送信待ち", by("pending")], ["失敗", by("failed")],
+   ["誤リプライ", by("skipped")]].forEach(([label, n]) => {
     const d = document.createElement("div");
     d.className = "stat";
     d.innerHTML = "<b>" + n + "</b><span>" + label + "</span>";
