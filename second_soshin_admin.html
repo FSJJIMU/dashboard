@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>セカンド自動送信 管理｜FIVE-STAR JAPAN</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Yu Gothic UI","Meiryo",system-ui,sans-serif;
+         background: #f6f7f9; color: #1f2328; }
+  a { color: inherit; }
+
+  /* 管理用と分かるよう、通常ページと帯の色を変える。
+     いま自分がどちらを見ているのか、開いた瞬間に分かるようにするため。 */
+  .top { background: #1f2937; color: #fff; padding: 14px 28px;
+         display: flex; align-items: center; gap: 14px; }
+  .top h1 { font-size: 16px; margin: 0; font-weight: 600; }
+  .top .badge { font-size: 11px; background: #374151; color: #d1d5db;
+                border-radius: 999px; padding: 3px 10px; }
+  .back { margin-left: auto; font-size: 13px; color: #93c5fd;
+          text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 20px auto 70px; padding: 0 20px; }
+
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+          padding: 18px 22px; margin-bottom: 16px;
+          box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .card h2 { font-size: 14px; margin: 0 0 10px; }
+  .sub { font-size: 12.5px; color: #6b7280; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit,minmax(110px,1fr));
+           gap: 10px; }
+  .stat { border: 1px solid #e5e7eb; border-radius: 9px; padding: 11px;
+          text-align: center; background: #fafbfc; }
+  .stat b { display: block; font-size: 21px; line-height: 1.2; }
+  .stat span { font-size: 11px; color: #6b7280; }
+  .stat.bad b { color: #b91c1c; }
+  .stat.good b { color: #15803d; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { border-bottom: 1px solid #f0f1f3; padding: 6px 8px;
+           text-align: left; vertical-align: top; }
+  th { color: #6b7280; font-weight: 600; white-space: nowrap; }
+  tbody tr:hover { background: #fafbfc; }
+  .st { font-size: 11px; border-radius: 999px; padding: 2px 7px;
+        white-space: nowrap; }
+  .st.sent { background: #dcfce7; color: #166534; }
+  .st.test { background: #e0e7ff; color: #3730a3; }
+  .st.pending { background: #fef3c7; color: #92400e; }
+  .st.failed { background: #fee2e2; color: #991b1b; }
+  .st.skipped { background: #f1f5f9; color: #64748b; }
+
+  .btn { display: inline-block; font-size: 12px; border: 1px solid #d7dce2;
+         border-radius: 7px; padding: 5px 11px; background: #fff;
+         color: #1f2328; font-family: inherit; line-height: 1.4;
+         cursor: pointer; }
+  .btn:hover { background: #f6f8fa; }
+  .btn.pri { background: #2563eb; border-color: #2563eb; color: #fff; }
+  .btn.danger { border-color: #fca5a5; color: #b91c1c; }
+  .btn.mini { padding: 2px 8px; font-size: 11px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+  pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px;
+        font-size: 11.5px; line-height: 1.6; white-space: pre-wrap;
+        word-break: break-all; max-height: 460px; overflow: auto; margin: 10px 0 0; }
+  .note { background: #fffbeb; border: 1px solid #fde68a; color: #92400e;
+          border-radius: 8px; padding: 10px 13px; font-size: 12.5px; }
+  .bar { height: 8px; background: #eef1f5; border-radius: 999px;
+         overflow: hidden; margin-top: 4px; }
+  .bar i { display: block; height: 100%; background: #16a34a; }
+  input[type=password], input[type=text] {
+    padding: 8px 11px; border: 1px solid #d7dce2; border-radius: 8px;
+    font-size: 13px; font-family: inherit; }
+</style></head><body>
+
+<div class="top">
+  <h1>セカンド自動送信 管理</h1>
+  <span class="badge">管理者用</span>
+  <a class="back" href="second_soshin.html">通常ページへ</a>
+</div>
+
+<div class="wrap">
+
+  <div id="keyBox" class="card" style="display:none">
+    <h2>接続キー</h2>
+    <div class="sub" style="margin-bottom:10px">
+      通常ページと同じ接続キーを入れてください。このブラウザにだけ保存されます。
+    </div>
+    <div class="row">
+      <input id="keyInput" type="password" placeholder="接続キーを貼り付け"
+             style="flex:1 1 340px">
+      <button class="btn pri" onclick="saveKey()">保存</button>
+    </div>
+  </div>
+
+  <div id="err" class="card" style="display:none"></div>
+
+  <!-- ═══ 全体の様子 ═══ -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">全体の様子</h2>
+      <div class="row">
+        <select id="span" onchange="load()"
+                style="padding:5px 8px;border:1px solid #d7dce2;border-radius:7px;
+                       font-size:12px;font-family:inherit">
+          <option value="1">今日</option>
+          <option value="7" selected>7日間</option>
+          <option value="30">30日間</option>
+        </select>
+        <button class="btn" onclick="load()">再読み込み</button>
+      </div>
+    </div>
+    <div class="stats" id="stats" style="margin-top:12px"></div>
+    <div id="rate" class="sub" style="margin-top:10px"></div>
+  </div>
+
+  <!-- ═══ 失敗の内訳 ═══ -->
+  <div class="card">
+    <h2>失敗の内訳</h2>
+    <div class="sub">同じ型でまとめています。多い型から順に。</div>
+    <div id="kinds" style="margin-top:10px"></div>
+  </div>
+
+  <!-- ═══ 事務員ごと ═══ -->
+  <div class="card">
+    <h2>事務員ごとの状況</h2>
+    <table><thead><tr>
+      <th>事務員</th><th>PC</th><th>担当</th>
+      <th style="text-align:right">送信</th>
+      <th style="text-align:right">失敗</th>
+      <th>最後の生存報告</th>
+    </tr></thead><tbody id="staffBody"></tbody></table>
+  </div>
+
+  <!-- ═══ 失敗・誤リプライの一覧 ═══ -->
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">手当てが要るもの</h2>
+      <div class="row">
+        <label class="sub"><input type="checkbox" id="onlyBad" checked
+               onchange="renderRows()"> 失敗・誤リプライだけ</label>
+        <button class="btn" onclick="exportCsv()">CSVで保存</button>
+      </div>
+    </div>
+    <table style="margin-top:10px"><thead><tr>
+      <th>日時</th><th>案件</th><th>取得者</th><th>ルーム</th>
+      <th>状態</th><th>内容</th><th></th>
+    </tr></thead><tbody id="rowsBody"></tbody></table>
+    <div id="more" class="sub" style="margin-top:8px"></div>
+    <pre id="detail" style="display:none"></pre>
+  </div>
+
+  <!-- ═══ データ操作 ═══ -->
+  <div class="card">
+    <h2>データ操作</h2>
+    <div class="note" style="margin-bottom:12px">
+      ここから先は<b>書き換え</b>です。実行のたびに<b>送信用キー</b>を聞きます。
+      キーは保存しません（ブラウザに残すと、この端末を触れる人が
+      顧客情報まで読めてしまうため）。
+    </div>
+    <div class="row">
+      <button class="btn" onclick="retrySelected()">
+        選んだ失敗をもう一度送る</button>
+      <button class="btn danger" onclick="purgeSkipped()">
+        30日より古い「誤リプライ」の記録を消す</button>
+    </div>
+    <div id="opLog" class="sub" style="margin-top:10px"></div>
+  </div>
+
+  <div class="sub" style="text-align:center">
+    このページは公開URL上にあります。リンクを隠しているだけなので、
+    URLを知られると開けます。書き換えは送信用キーで守っています。
+  </div>
+</div>
+
+<script>
+/* 接続先。ここに入れるのは公開してよい anon キーではなく、
+   キー自体は利用者が貼り付けてブラウザに保存する。 */
+const SUPABASE_URL = "https://vbzwevceisxliumsqytd.supabase.co";
+const KEY_STORE = "fsj_second_anon_key";      /* 通常ページと同じものを使う */
+let ANON = (localStorage.getItem(KEY_STORE) || "").trim();
+
+let ROWS = [];          /* 期間内のキュー */
+let STAFF = [];
+
+function hdr(k) {
+  const key = k || ANON;
+  return { apikey: key, Authorization: "Bearer " + key,
+           "Content-Type": "application/json" };
+}
+
+function saveKey() {
+  const v = document.getElementById("keyInput").value.trim();
+  if (!v) return;
+  localStorage.setItem(KEY_STORE, v);
+  ANON = v;
+  document.getElementById("keyBox").style.display = "none";
+  load();
+}
+
+function showErr(msg) {
+  const e = document.getElementById("err");
+  e.style.display = "";
+  e.className = "card";
+  e.innerHTML = "";
+  const b = document.createElement("div");
+  b.className = "note";
+  b.textContent = msg;
+  e.appendChild(b);
+}
+
+/* 失敗の型。note の文言から、人が読んで分かる名前に寄せる。
+   ★型でまとめないと、同じ原因が別々の失敗に見えて優先順位が付けられない。 */
+function kindOf(note) {
+  const n = note || "";
+  const T = [
+    ["拡張ターゲット", "LINEのタブが無い"],
+    ["CDP 到達不可", "Chromeが起動していない"],
+    ["トークを開けません", "相手のトークを開けない"],
+    ["「トーク」ボタンが見つかりません", "相手のトークを開けない（初めての相手）"],
+    ["とはトークを始められません", "友だちに入っていない"],
+    ["フォーカス失敗", "入力欄を選べない"],
+    ["候補が", "同名の相手が複数いる"],
+    ["違うトークが開いています", "別のトークが開いた（送信中止）"],
+    ["セカンド本文", "セカンド本文が無い"],
+    ["navigate", "ルームを開けない"],
+    ["メッセージ", "取得リプライが画面に無い"],
+    ["compose 値が入らず", "入力欄に文字が入らない"],
+    ["送信検証失敗", "送信できたか確認できない"],
+    ["中断", "送信中に中断"],
+    ["claim_message_id", "取得リプライのIDが無い"],
+    ["すでに取得済み", "誤リプライ"],
+  ];
+  for (const [k, label] of T) if (n.includes(k)) return label;
+  return n ? n.slice(0, 28) : "（記録なし）";
+}
+
+function el(tag, text, cls) {
+  const e = document.createElement(tag);
+  if (text !== undefined && text !== null) e.textContent = text;
+  if (cls) e.className = cls;
+  return e;
+}
+
+async function load() {
+  if (!ANON) { document.getElementById("keyBox").style.display = ""; return; }
+  const days = +document.getElementById("span").value;
+  const since = new Date(Date.now() - days * 864e5).toISOString();
+  try {
+    const [q, s] = await Promise.all([
+      fetch(SUPABASE_URL + "/rest/v1/dispatch_status_v?select=*"
+            + "&detected_at=gte." + since
+            + "&order=detected_at.desc&limit=2000", { headers: hdr() }),
+      fetch(SUPABASE_URL + "/rest/v1/staff?select=*&order=display_name",
+            { headers: hdr() })
+    ]);
+    if (q.status === 401 || q.status === 403) {
+      localStorage.removeItem(KEY_STORE); ANON = "";
+      document.getElementById("keyBox").style.display = "";
+      showErr("接続キーが正しくないようです。入れ直してください。");
+      return;
+    }
+    if (!q.ok) throw new Error("HTTP " + q.status);
+    ROWS = await q.json();
+    STAFF = s.ok ? await s.json() : [];
+    document.getElementById("err").style.display = "none";
+  } catch (e) {
+    showErr("読み込みに失敗しました: " + e.message);
+    return;
+  }
+  renderStats();
+  renderKinds();
+  renderStaff();
+  renderRows();
+}
+
+function renderStats() {
+  const by = k => ROWS.filter(r => r.status === k).length;
+  const sent = by("sent") + by("test");
+  const failed = by("failed");
+  const pend = by("pending");
+  const skip = by("skipped");
+  const box = document.getElementById("stats");
+  box.innerHTML = "";
+  const items = [
+    ["検知", ROWS.length, ""],
+    ["送信済み", sent, "good"],
+    ["失敗", failed, failed ? "bad" : ""],
+    ["送信待ち", pend, pend ? "bad" : ""],
+    ["誤リプライ", skip, ""],
+  ];
+  for (const [label, n, cls] of items) {
+    const d = el("div", null, "stat" + (cls ? " " + cls : ""));
+    d.appendChild(el("b", n));
+    d.appendChild(el("span", label));
+    box.appendChild(d);
+  }
+  const total = sent + failed;
+  const pct = total ? (sent / total * 100) : 100;
+  const r = document.getElementById("rate");
+  r.innerHTML = "";
+  r.appendChild(el("div", "送信できた割合 " + pct.toFixed(1) + "％"
+                   + "（" + sent + " / " + total + "）"));
+  const bar = el("div", null, "bar");
+  const fill = el("i");
+  fill.style.width = pct + "%";
+  if (pct < 95) fill.style.background = "#dc2626";
+  bar.appendChild(fill);
+  r.appendChild(bar);
+}
+
+function renderKinds() {
+  const bad = ROWS.filter(r => r.status === "failed");
+  const m = new Map();
+  for (const r of bad) {
+    const k = kindOf(r.note);
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(r);
+  }
+  const box = document.getElementById("kinds");
+  box.innerHTML = "";
+  if (!m.size) {
+    box.appendChild(el("div", "この期間に失敗はありません。", "sub"));
+    return;
+  }
+  const t = el("table");
+  const tb = el("tbody");
+  [...m.entries()].sort((a, b) => b[1].length - a[1].length)
+    .forEach(([k, rows]) => {
+      const tr = el("tr");
+      tr.appendChild(el("td", rows.length + "件"));
+      tr.appendChild(el("td", k));
+      const last = rows[0];
+      tr.appendChild(el("td", "最後: "
+        + new Date(last.detected_at).toLocaleString("ja-JP")));
+      const td = el("td");
+      const b = el("button", "この型を見る", "btn mini");
+      b.onclick = () => {
+        document.getElementById("onlyBad").checked = true;
+        renderRows(k);
+      };
+      td.appendChild(b);
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    });
+  t.appendChild(tb);
+  box.appendChild(t);
+}
+
+function renderStaff() {
+  const tb = document.getElementById("staffBody");
+  tb.innerHTML = "";
+  for (const s of STAFF) {
+    const mine = ROWS.filter(r => r.locked_by === s.staff_key);
+    const seen = s.client_seen_at ? new Date(s.client_seen_at) : null;
+    const up = seen && (Date.now() - seen.getTime()) < 120000;
+    const tr = el("tr");
+    tr.appendChild(el("td", s.display_name || s.staff_key));
+    tr.appendChild(el("td", up ? "稼働中" : "未起動"));
+    tr.appendChild(el("td", s.auto_send ? "送信担当" : ""));
+    const a = el("td", mine.filter(r => r.status === "sent").length);
+    a.style.textAlign = "right";
+    tr.appendChild(a);
+    const b = el("td", mine.filter(r => r.status === "failed").length);
+    b.style.textAlign = "right";
+    tr.appendChild(b);
+    tr.appendChild(el("td", seen ? seen.toLocaleString("ja-JP") : "—"));
+    tb.appendChild(tr);
+  }
+}
+
+let SHOWN = [];
+function renderRows(filterKind) {
+  const only = document.getElementById("onlyBad").checked;
+  let rows = only
+    ? ROWS.filter(r => r.status === "failed" || r.status === "skipped")
+    : ROWS;
+  if (filterKind) rows = rows.filter(r => kindOf(r.note) === filterKind);
+  SHOWN = rows.slice(0, 200);
+  const tb = document.getElementById("rowsBody");
+  tb.innerHTML = "";
+  for (const r of SHOWN) {
+    const tr = el("tr");
+    tr.appendChild(el("td", new Date(r.detected_at)
+      .toLocaleString("ja-JP", { month: "2-digit", day: "2-digit",
+                                 hour: "2-digit", minute: "2-digit" })));
+    tr.appendChild(el("td", r.case_no));
+    tr.appendChild(el("td", r.player_line_name || ""));
+    tr.appendChild(el("td", (r.room_name || "").replace("案件紹介ROOM", "")));
+    const st = el("td");
+    st.appendChild(el("span", r.status, "st " + r.status));
+    tr.appendChild(st);
+    tr.appendChild(el("td", kindOf(r.note)));
+    const act = el("td");
+    act.style.whiteSpace = "nowrap";
+    // 送り直せるのは失敗した行だけ。選べる状態にしておく。
+    if (r.status === "failed") {
+      const c = document.createElement("input");
+      c.type = "checkbox";
+      c.dataset.id = r.id;
+      c.className = "pick";
+      c.title = "送り直す対象に選ぶ";
+      c.style.marginRight = "6px";
+      act.appendChild(c);
+    }
+    const b = el("button", "詳しく", "btn mini");
+    b.onclick = () => showDetail(r);
+    act.appendChild(b);
+    tr.appendChild(act);
+    tb.appendChild(tr);
+  }
+  document.getElementById("more").textContent =
+    rows.length > SHOWN.length
+      ? "他に " + (rows.length - SHOWN.length) + " 件あります"
+      : (rows.length ? "" : "該当なし");
+}
+
+function showDetail(r) {
+  const L = [];
+  L.push("案件 " + r.case_no + " ／ " + (r.player_line_name || "取得者不明"));
+  L.push("ルーム " + (r.room_name || "—"));
+  L.push("状態 " + r.status
+         + (r.locked_by ? "（" + r.locked_by + " のPC）" : ""));
+  L.push("検知 " + new Date(r.detected_at).toLocaleString("ja-JP"));
+  if (r.sent_at) L.push("送信 " + new Date(r.sent_at).toLocaleString("ja-JP"));
+  if (r.note) { L.push("", "■ 何が起きたか", r.note); }
+  if (r.debug) {
+    L.push("", "■ そのときの画面", JSON.stringify(r.debug, null, 1));
+  } else if (r.status === "failed") {
+    L.push("", "（画面の記録はありません。"
+           + "debug_column.sql を実行すると次回から残ります）");
+  }
+  const d = document.getElementById("detail");
+  d.textContent = L.join("\n");
+  d.style.display = "";
+  d.scrollIntoView({ block: "nearest" });
+}
+
+function exportCsv() {
+  const cols = ["detected_at", "case_no", "player_line_name", "room_name",
+                "status", "locked_by", "note"];
+  const esc = v => '"' + String(v === null || v === undefined ? "" : v)
+    .replace(/"/g, '""') + '"';
+  const lines = [cols.join(",")];
+  for (const r of SHOWN) lines.push(cols.map(c => esc(r[c])).join(","));
+  /* Excelで開いたときに文字化けしないよう BOM を付ける */
+  const blob = new Blob(["﻿" + lines.join("\r\n")],
+                        { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "second_sender_" + new Date().toISOString().slice(0, 10) + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+/* ── 書き換え。送信用キーは毎回聞いて、保存しない ── */
+function askKey(what) {
+  const k = prompt("「" + what + "」を実行します。\n"
+                   + "送信用キーを貼り付けてください（保存しません）");
+  return (k || "").trim();
+}
+
+function opLog(msg) {
+  document.getElementById("opLog").textContent = msg;
+}
+
+async function retrySelected() {
+  const ids = [...document.querySelectorAll(".pick:checked")]
+    .map(c => c.dataset.id);
+  if (!ids.length) { opLog("行の左のチェックで、送り直すものを選んでください。"); return; }
+  if (!confirm(ids.length + "件を送信待ちに戻します。\n"
+               + "送信担当のPCが動いていれば、そのまま送られます。")) return;
+  const key = askKey("もう一度送る");
+  if (!key) return;
+  let ok = 0, ng = 0;
+  for (const id of ids) {
+    try {
+      const r = await fetch(SUPABASE_URL + "/rest/v1/dispatch_queue?id=eq." + id,
+        { method: "PATCH",
+          headers: { ...hdr(key), Prefer: "return=minimal" },
+          body: JSON.stringify({ status: "pending", note: null,
+                                 locked_by: null, locked_at: null }) });
+      r.ok ? ok++ : ng++;
+    } catch (e) { ng++; }
+  }
+  opLog("送信待ちに戻しました: " + ok + "件"
+        + (ng ? " ／ 失敗 " + ng + "件（キーを確認してください）" : ""));
+  load();
+}
+
+async function purgeSkipped() {
+  if (!confirm("30日より古い「誤リプライ」の記録を消します。\n"
+               + "送信済みの記録は消しません。")) return;
+  const key = askKey("古い記録を消す");
+  if (!key) return;
+  const before = new Date(Date.now() - 30 * 864e5).toISOString();
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/dispatch_queue"
+      + "?status=eq.skipped&detected_at=lt." + before,
+      { method: "DELETE",
+        headers: { ...hdr(key), Prefer: "return=representation" } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const gone = await r.json();
+    opLog("消しました: " + gone.length + "件");
+    load();
+  } catch (e) {
+    opLog("消せませんでした: " + e.message + "（キーを確認してください）");
+  }
+}
+
+load();
+</script>
+</body></html>

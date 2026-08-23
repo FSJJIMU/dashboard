@@ -252,6 +252,16 @@
     </div>
   </div>
 
+
+  <!-- ★管理ページへの入口。目には入らないが、押せば開く。
+       事務員の画面を余計な項目で埋めないための隠し方であって、
+       公開URLなので「鍵」ではない。中身の書き換えは送信用キーで守っている。
+       場所: 一番下の余白の右端。 -->
+  <div style="text-align:right;margin-top:28px">
+    <a href="second_soshin_admin.html" title="管理"
+       style="color:transparent;font-size:11px;text-decoration:none;
+              padding:6px 10px">管理</a>
+  </div>
 </div>
 
 <script>
@@ -381,12 +391,8 @@ function renderQueue(rows) {
   const t = rows.filter(r => new Date(r.detected_at) >= today);
   const by = k => t.filter(r => r.status === k).length;
   statsEl.innerHTML = "";
-  /* ★「誤リプライ」を独立して出す。
-     これが無いと、検知の数だけ増えて送信済みと合わず、
-     「送れていない案件がある」と誤解される。 */
   [["検知", t.length], ["送信済み", by("sent")], ["テスト", by("test")],
-   ["送信待ち", by("pending")], ["失敗", by("failed")],
-   ["誤リプライ", by("skipped")]].forEach(([label, n]) => {
+   ["送信待ち", by("pending")], ["失敗", by("failed")]].forEach(([label, n]) => {
     const d = document.createElement("div");
     d.className = "stat";
     d.innerHTML = "<b>" + n + "</b><span>" + label + "</span>";
@@ -398,10 +404,21 @@ function renderQueue(rows) {
     const tr = document.createElement("tr");
     const time = new Date(r.detected_at).toLocaleTimeString("ja-JP",
                    { hour: "2-digit", minute: "2-digit" });
-    tr.innerHTML = "<td>" + time + "</td><td>" + r.case_no + "</td>"
-      + "<td>" + (r.player_line_name || "") + "</td>"
-      + "<td>" + (r.room_name || "") + "</td>"
-      + '<td><span class="st ' + r.status + '">' + r.status + "</span></td>";
+    /* ★DBから来る値は textContent で入れる。
+       innerHTML に混ぜると、ルーム名などにHTMLが入っていたとき
+       そのまま実行されてしまう。 */
+    for (const v of [time, r.case_no, r.player_line_name || "",
+                     r.room_name || ""]) {
+      const td = document.createElement("td");
+      td.textContent = v;
+      tr.appendChild(td);
+    }
+    const td = document.createElement("td");
+    const chip = document.createElement("span");
+    chip.className = "st " + r.status;
+    chip.textContent = r.status;
+    td.appendChild(chip);
+    tr.appendChild(td);
     recentBody.appendChild(tr);
   });
   if (!rows.length)
