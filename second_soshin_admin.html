@@ -489,6 +489,11 @@ function opLog(msg) {
   document.getElementById("opLog").textContent = msg;
 }
 
+function noteOf(id) {
+  const r = (SHOWN || []).find(x => String(x.id) === String(id));
+  return r && r.note;
+}
+
 async function retrySelected() {
   const ids = [...document.querySelectorAll(".pick:checked")]
     .map(c => c.dataset.id);
@@ -503,7 +508,13 @@ async function retrySelected() {
       const r = await fetch(SUPABASE_URL + "/rest/v1/dispatch_queue?id=eq." + id,
         { method: "PATCH",
           headers: { ...hdr(key), Prefer: "return=minimal" },
-          body: JSON.stringify({ status: "pending", note: null,
+          /* ★前回の理由を消さない。消すと「なぜ失敗したのか」が
+             送り直した瞬間に分からなくなり、同じことが起きても
+             一度目と二度目を見分けられない。 */
+          body: JSON.stringify({ status: "pending",
+                                 note: "手動で送り直し（前回: "
+                                       + String(noteOf(id) || "理由なし").slice(0, 120)
+                                       + "）",
                                  locked_by: null, locked_at: null }) });
       r.ok ? ok++ : ng++;
     } catch (e) { ng++; }
