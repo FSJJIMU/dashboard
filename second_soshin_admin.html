@@ -209,6 +209,8 @@ function showErr(msg) {
    ★型でまとめないと、同じ原因が別々の失敗に見えて優先順位が付けられない。 */
 function kindOf(note) {
   const n = note || "";
+  // 時間切れは「機械はもう試さない・人が送る」の合図なので最優先で出す
+  if (n.includes("時間切れ")) return "時間切れ（手で送ってください）";
   const T = [
     ["拡張ターゲット", "LINEのタブが無い"],
     ["CDP 到達不可", "Chromeが起動していない"],
@@ -420,16 +422,43 @@ function showDetail(r) {
   L.push("検知 " + new Date(r.detected_at).toLocaleString("ja-JP"));
   if (r.sent_at) L.push("送信 " + new Date(r.sent_at).toLocaleString("ja-JP"));
   if (r.note) { L.push("", "■ 何が起きたか", r.note); }
-  if (r.debug) {
-    L.push("", "■ そのときの画面", JSON.stringify(r.debug, null, 1));
-  } else if (r.status === "failed") {
-    L.push("", "（画面の記録はありません。"
-           + "debug_column.sql を実行すると次回から残ります）");
-  }
   const d = document.getElementById("detail");
   d.textContent = L.join("\n");
   d.style.display = "";
   d.scrollIntoView({ block: "nearest" });
+  if (r.status === "failed") loadDebug(r, d, L);
+}
+
+/* そのときの状態は、事務員の接続キーでは読めない場所に置いてある。
+   ★管理キーを聞くのは押したときだけ。開くたびに聞かれると
+     煩わしくて、結局どこかに保存してしまう。保存はしない。 */
+let DEBUG_KEY = null;
+
+async function loadDebug(r, d, L) {
+  if (!DEBUG_KEY) {
+    DEBUG_KEY = (prompt("そのときの状態を見ます。\n"
+                        + "管理キーを貼り付けてください（保存しません）")
+                 || "").trim();
+    if (!DEBUG_KEY) { DEBUG_KEY = null; return; }
+  }
+  const show = (extra) => { d.textContent = L.join("\n") + "\n\n" + extra; };
+  try {
+    const res = await fetch(SUPABASE_URL + "/rest/v1/dispatch_debug_v"
+      + "?select=debug&id=eq." + encodeURIComponent(r.id),
+      { headers: { apikey: DEBUG_KEY, Authorization: "Bearer " + DEBUG_KEY } });
+    if (!res.ok) {
+      DEBUG_KEY = null;
+      show("（状態を読めませんでした。キーが違うか、"
+           + "debug_column.sql が未実行です）");
+      return;
+    }
+    const rows = await res.json();
+    const dbg = rows[0] && rows[0].debug;
+    show(dbg ? "■ そのときの状態\n" + JSON.stringify(dbg, null, 1)
+             : "（この失敗には状態の記録がありません）");
+  } catch (e) {
+    show("（状態を読めませんでした: " + e + "）");
+  }
 }
 
 function exportCsv() {
