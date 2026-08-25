@@ -1,0 +1,207 @@
+<!-- 公開範囲の実測ページ（読み取りだけ・何も書き換えない）
+
+     ★コードやSQLを読むだけでは、広がっていることに気づけない。
+       実際に接続キーで叩いて、何が返ってくるかを見る。
+       接続キーは事務員全員が持っているので、これで読めるものは
+       「事務員なら誰でも読めるもの」と同じ。
+
+     ★未ログインの確認では apikey だけでは 401 になり「安全」に見える。
+       Authorization: Bearer にも同じ鍵を載せて初めて anon として読める。
+       この取り違えで安全だと誤判定した実例があるため、両方で試す。 -->
+<title>公開範囲の点検</title>
+<style>
+  :root{
+    --bg:#f8fafc; --card:#fff; --line:#e2e8f0; --fg:#0f172a; --sub:#64748b;
+    --ok:#059669; --ng:#dc2626; --warn:#d97706;
+  }
+  :root:not([data-theme="light"]){}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f172a; --card:#1e293b; --line:#334155; --fg:#f1f5f9; --sub:#94a3b8;
+      --ok:#34d399; --ng:#f87171; --warn:#fbbf24;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0f172a; --card:#1e293b; --line:#334155; --fg:#f1f5f9; --sub:#94a3b8;
+    --ok:#34d399; --ng:#f87171; --warn:#fbbf24;
+  }
+  body{background:var(--bg);color:var(--fg);margin:0;
+       font:14px/1.7 -apple-system,"Segoe UI","Hiragino Kaku Gothic ProN",
+            "Yu Gothic UI",sans-serif}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--sub);font-size:13px;margin:0 0 20px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+        padding:18px;margin-bottom:16px}
+  h2{font-size:15px;margin:0 0 12px}
+  button{background:#2563eb;color:#fff;border:0;border-radius:8px;
+         padding:9px 18px;font-size:14px;cursor:pointer}
+  button:disabled{opacity:.5;cursor:default}
+  .tblwrap{overflow-x:auto}
+  table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);
+        vertical-align:top}
+  th{color:var(--sub);font-weight:600;white-space:nowrap}
+  .ok{color:var(--ok);font-weight:600}
+  .ng{color:var(--ng);font-weight:700}
+  .warn{color:var(--warn);font-weight:600}
+  .note{color:var(--sub);font-size:12px}
+  pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;
+      padding:12px;font-size:12px;overflow:auto;white-space:pre-wrap;
+      word-break:break-all}
+  .verdict{font-size:15px;font-weight:700;margin:0 0 8px}
+</style>
+
+<div class="wrap">
+  <h1>公開範囲の点検</h1>
+  <p class="sub">接続キーで実際に叩いて、何が読めるかを確かめます。
+    読み取りだけで、何も書き換えません。</p>
+
+  <div class="card">
+    <h2>実行</h2>
+    <p class="note" id="keyState">接続キーを確認しています…</p>
+    <button id="run">点検する</button>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none">
+    <h2>結果</h2>
+    <p class="verdict" id="verdict"></p>
+    <div class="tblwrap">
+      <table>
+        <thead><tr>
+          <th>対象</th><th>接続キーで</th><th>件数</th><th>顧客情報</th><th>判定</th>
+        </tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p class="note" id="anonNote"></p>
+  </div>
+
+  <div class="card" id="detailCard" style="display:none">
+    <h2>読めた列</h2>
+    <pre id="detail"></pre>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://vbzwevceisxliumsqytd.supabase.co";
+const KEY_STORE = "fsj_second_anon_key";
+
+/* 顧客の氏名・住所・電話番号が入る列。ここが読めたら重大。 */
+const PII_COLS = ["second_text"];
+
+/* 点検する対象と、それぞれの「あるべき姿」。
+   ★期待値を書いておかないと、結果を見ても正常か判断できない。 */
+const TARGETS = [
+  { name: "dispatch_queue",      want: "読めてはいけない", why: "顧客情報が入っている元の表" },
+  { name: "dispatch_debug_v",    want: "読めてはいけない", why: "失敗時の状態（管理用）" },
+  { name: "line_events",         want: "読めてはいけない", why: "LINEの全メッセージ" },
+  { name: "line_users",          want: "読めてはいけない", why: "LINE利用者" },
+  { name: "player_master",       want: "読めてはいけない", why: "担当者マスタ" },
+  { name: "staff_contact_names", want: "読めてはいけない", why: "連絡先名" },
+  { name: "line_groups",         want: "読めてはいけない", why: "ルーム一覧" },
+  { name: "dispatch_status_v",   want: "読めてよい",       why: "ダッシュボードが使う（顧客情報を含まない）" },
+  { name: "second_mode_v",       want: "読めてよい",       why: "テストモードの表示" },
+  { name: "staff",               want: "読めてよい",       why: "事務員のトグル" },
+  { name: "app_settings",        want: "読めてよい",       why: "テストモードの切替" },
+];
+
+/* ★localStorage は、ファイルを直接開いたときなど参照するだけで
+   例外になる場合がある。そこで止まると、以降の処理が丸ごと
+   読み込まれず「ボタンを押しても何も起きない」ページになる。 */
+function savedKey() {
+  try { return localStorage.getItem(KEY_STORE) || ""; }
+  catch (e) { return ""; }
+}
+
+function getKey() {
+  return savedKey()
+    || (prompt("接続キーを貼り付けてください（保存しません）") || "").trim();
+}
+
+document.getElementById("keyState").textContent = savedKey()
+  ? "このブラウザに保存されている接続キーを使います。"
+  : "接続キーが保存されていません。実行時に貼り付けてもらいます。";
+
+async function probe(name, key) {
+  /* ★apikey だけでは 401 になり「安全」に見えてしまう。
+     Bearer にも同じ鍵を載せて、anon として本当に読めるかを見る。 */
+  const url = SUPABASE_URL + "/rest/v1/" + name + "?select=*&limit=1";
+  try {
+    const r = await fetch(url, {
+      headers: { apikey: key, Authorization: "Bearer " + key,
+                 Prefer: "count=exact", Range: "0-0" } });
+    if (!r.ok) return { readable: false, code: r.status };
+    const rows = await r.json();
+    const cr = r.headers.get("content-range") || "";
+    const total = cr.includes("/") ? cr.split("/")[1] : "?";
+    const cols = rows[0] ? Object.keys(rows[0]) : [];
+    return { readable: true, code: r.status, total, cols,
+             pii: cols.filter(c => PII_COLS.includes(c)) };
+  } catch (e) {
+    return { readable: false, code: "通信不可" };
+  }
+}
+
+document.getElementById("run").onclick = async () => {
+  const key = getKey();
+  if (!key) return;
+  const btn = document.getElementById("run");
+  btn.disabled = true; btn.textContent = "点検中…";
+  const tb = document.getElementById("rows");
+  tb.textContent = "";
+  const detail = [];
+  let bad = 0, piiHit = 0;
+
+  for (const t of TARGETS) {
+    const r = await probe(t.name, key);
+    const shouldRead = t.want === "読めてよい";
+    const good = r.readable === shouldRead;
+    if (!good) bad++;
+    if (r.pii && r.pii.length) piiHit++;
+
+    const tr = document.createElement("tr");
+    const cells = [
+      t.name,
+      r.readable ? "読める" : "読めない（" + r.code + "）",
+      r.readable ? String(r.total) : "—",
+      r.pii && r.pii.length ? r.pii.join(",") : "—",
+      good ? "問題なし" : (shouldRead ? "読めない（動かない）" : "読めてしまう"),
+    ];
+    cells.forEach((v, i) => {
+      const td = document.createElement("td");
+      td.textContent = v;
+      if (i === 3 && r.pii && r.pii.length) td.className = "ng";
+      if (i === 4) td.className = good ? "ok" : "ng";
+      tr.appendChild(td);
+    });
+    tb.appendChild(tr);
+    if (r.readable) detail.push(t.name + "\n  " + (r.cols || []).join(", "));
+  }
+
+  /* 鍵を一切付けない場合も見ておく（本当の未ログイン） */
+  let anon = "確認できませんでした";
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/dispatch_status_v?select=case_no&limit=1");
+    anon = r.ok ? "★鍵なしでも読めてしまいます（" + r.status + "）"
+                : "鍵なしでは読めません（" + r.status + "）";
+  } catch (e) {}
+  document.getElementById("anonNote").textContent = "鍵を一切付けない場合: " + anon;
+
+  const v = document.getElementById("verdict");
+  if (piiHit) {
+    v.textContent = "重大: 顧客情報の列が接続キーで読めています";
+    v.className = "verdict ng";
+  } else if (bad) {
+    v.textContent = "要確認: 想定と違う対象が " + bad + "件あります";
+    v.className = "verdict warn";
+  } else {
+    v.textContent = "問題なし: 顧客情報は接続キーでは読めません";
+    v.className = "verdict ok";
+  }
+  document.getElementById("resultCard").style.display = "";
+  document.getElementById("detail").textContent = detail.join("\n\n");
+  document.getElementById("detailCard").style.display = "";
+  btn.disabled = false; btn.textContent = "もう一度点検する";
+};
+</script>
